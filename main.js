@@ -28,9 +28,6 @@ if (0 == process_args.length) {
   log._logE('Main::EntryPoint', 'argument code should be here.');
   return;
 }
-for(var i = 0; i < 1000000;i++)
-  console.log('hello',i);
-return;
 
 log._logR('Main::SearchKey', search_code);
 db = new dbop;
