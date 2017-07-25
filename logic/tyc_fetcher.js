@@ -78,13 +78,15 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
             .children('.search_right_item')
             .children('.row.pb10');
 
+        data_result['search_offset'] = (page_data.index - 1) * 20 + page_data.datas.length + 1;
+
         data_result['company_detail_url'] = company_row
             .children('.col-xs-10')
             .children('a')
             .attr('href');
 
-        data_result['company_id'] = data_result['company_detail_url']
-            .match(company_id_matcher)[4];
+        var detail_url = data_result['company_detail_url'].match(company_id_matcher);
+        data_result['company_id'] = detail_url.length > 4?detail_url[4]:'not found.';
 
         data_result['company_logo'] = $(this)
             .children('.mr20')

@@ -19,9 +19,29 @@ process.on('SIGINT', function () {
     process.exit(0);
   });
 });
+
+var process_args = process.argv.splice(2);
+var search_code = process_args[0];
+var main = null;
+if (0 == process_args.length) {
+  log._logR('Main::EntryPoint', 'argument code should be here.');
+  log._logE('Main::EntryPoint', 'argument code should be here.');
+  return;
+}
+for(var i = 0; i < 1000000;i++)
+  console.log('hello',i);
+return;
+
+log._logR('Main::SearchKey', search_code);
 db = new dbop;
 db.config();
 setTimeout(function () {
+  // db.ensureTablesExist(function (ok) {
+  //   db.buildSearchTasks(1000, '1000-per-time', function (ok) {
+  //     console.log('buildSearchTasks', ok);
+  //   });
+  // });
+  // return;
   var tasks = [];
   var skeys = [];
   var next_func = function (cb) {
@@ -37,23 +57,54 @@ setTimeout(function () {
       );
       e.emit(true, function () {
         log._logR('Main::finished', 'one.');
+        //redo again.
+        main(function (ok) {
+          if (ok) {
+            log._logR('Main::Continue', 'one more time...');
+            main();
+          } else {
+            log._logR('Main::Done', 'All done...');
+          }
+        });
       });
       cb(null);
     }
   };
-
-  db.getSearchKeys(1, 1000, function (keys) {
-    if (keys) {
-      for (var k in keys) {
-        skeys.push(keys[k].searchKey);
-        tasks.push(function (callback) {
-          next_func(callback);
+  var main = function (cb_main) {
+    db.getSearchTaskUnitToRun(search_code, function (runitem) {
+      if (runitem) {
+        db.updateSearchTaskStatus(runitem.id, 'running', function (ok) {
+          if (ok) {
+            log._logR('Main::Run', search_code, 'Ready to run,from', runitem.from, 'to', runitem.to);
+            db.getSearchKeys(runitem.from, runitem.to, function (keys) {
+              if (keys) {
+                for (var k in keys) {
+                  skeys.push(keys[k].searchKey);
+                  tasks.push(function (callback) {
+                    next_func(callback);
+                  });
+                }
+                async.waterfall(tasks, function (error, result) {
+                });
+              }
+            });
+          } else {
+            log._logR('Main::Run', 'task not found.', search_code);
+            log._logE('Main::Run', 'task not found.', search_code);
+          }
         });
+        if (cb_main)
+          cb_main(true);
+      } else {
+        log._logR('Main::Run', 'No data to run', search_code);
+        log._logE('Main::Run', 'No data to run', search_code);
+        if (cb_main)
+          cb_main(false);
       }
-      async.waterfall(tasks, function (error, result) {
-      });
-    }
-  });
+    });
+  }
+  main();
+
 }, 1000);
 
 // if (cluster.isMaster) {

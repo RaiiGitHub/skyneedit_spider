@@ -13,27 +13,36 @@ class DbOperator {
         this.dbname_ = dbname;
     }
     config() {
+        var connect_size = arguments[0] ? arguments[0] : 1;
         if (!DbOperator.static_max_con_) {
             DbOperator.static_max_con_ = 8;//max connection.
             DbOperator.static_connections_ = [];
         }
-        var cur_con_len_ = DbOperator.static_connections_.length;
-        if (cur_con_len_ < 8) {
-            DbOperator.static_connections_.push(mysql.createConnection({
-                host: this.host_,
-                user: this.user_,
-                password: this.psw_,
-                database: (this.dbname_?this.dbname_:null)
-            }));
-            //connect right now!
-            this.connection_ = DbOperator.static_connections_[cur_con_len_];
-            this.connect(true);
-        } else {
-            var random_index = Math.floor(Math.random()*10)%DbOperator.static_connections_.length;
-            this.connection_ = DbOperator.static_connections_[random_index];
+        for (var i = 0; i < connect_size; i++) {
+            var cur_con_len_ = DbOperator.static_connections_.length;
+            if (cur_con_len_ < 8) {
+                DbOperator.static_connections_.push(mysql.createConnection({
+                    host: this.host_,
+                    user: this.user_,
+                    password: this.psw_,
+                    database: (this.dbname_ ? this.dbname_ : null)
+                }));
+                //connect right now!
+                this.connection_ = DbOperator.static_connections_[cur_con_len_];
+                this.connect(true);
+            } else {
+                var random_index = Math.floor(Math.random() * 10) % DbOperator.static_connections_.length;
+                this.connection_ = DbOperator.static_connections_[random_index];
+            }
         }
     }
     check() {
+        if (DbOperator.static_connections_
+            && DbOperator.static_connections_.length > 1) {
+            var random_index = Math.floor(Math.random() * 10) % DbOperator.static_connections_.length;
+            this.connection_ = DbOperator.static_connections_[random_index];
+            console.log('multi connection!', 'connect pool...');
+        }
         if (null == this.connection_) {
             log._logE('Mysql::ensureTablesExist', 'no connection');
             return false;

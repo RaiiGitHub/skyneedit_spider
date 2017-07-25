@@ -6,8 +6,8 @@ const log = require('./log');
 const guid = require('./guidgen');
 const urlentity = require('./urlentity');
 const proxyBaseUrl = 'http://192.168.6.110';
-//const proxyUrl = proxyBaseUrl + '/ip/getInfo/';
-const proxyUrl = proxyBaseUrl + '/ip/getInfo?type=' + urlentity.encodeUrl('衢州市');
+const proxyUrl = proxyBaseUrl + '/ip/getInfo/';
+//const proxyUrl = proxyBaseUrl + '/ip/getInfo?type=' + urlentity.encodeUrl('衢州市');
 const proxyReleaseUrl = proxyBaseUrl + '/ip/reDial/';
 
 class ProxyVisitor {

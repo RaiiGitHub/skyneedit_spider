@@ -192,6 +192,7 @@ class MethodStep3 extends explainer.MethodBase {
             up.stamp();
             if (up.empty()) {
                 self.finish(cb_parent);//notify parent.
+                callback(null);
             } else {
                 callback(null);
             }
