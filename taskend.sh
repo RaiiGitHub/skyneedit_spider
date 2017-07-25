@@ -1,5 +1,5 @@
 #!/bin/sh
-#kill processes.
+#kill processes. warning! you should know the process exactly that you want to kill.
 if [ $# -lt 1 ]
 then
   echo "parameter needed：procedure_name"
