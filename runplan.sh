@@ -4,14 +4,17 @@ cd /data/tianyc
 #!/bin/sh
 w = `ps -fe|grep tianyc |grep -v grep|wc -l`
 echo $w
-if (($w < 30))
+if (($w <= 30))
 then
+    echo "clean processes....."
 	PROCESS=`ps -ef|grep tianyc|grep -v grep|grep -v PPID|awk '{ print $2}'`
     for i in $PROCESS
     do
         echo "Kill the $1 process [ $i ]"
         kill -9 $i
     done
+    echo "clean proxy....."
+    node main_releaseproxy.js
 fi
 echo "start main.js in 30 process....."
 #####
