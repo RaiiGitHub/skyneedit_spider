@@ -85,8 +85,8 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
             .children('.col-xs-10')
             .children('a')
             .attr('href');
-
-        var detail_url = data_result['company_detail_url'].match(company_id_matcher);
+        var cdu = data_result['company_detail_url'];
+        var detail_url = cdu?cdu.match(company_id_matcher):'';
         data_result['company_id'] = detail_url.length > 4 ? detail_url[4] : 'not found.';
 
         data_result['company_logo'] = $(this)

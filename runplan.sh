@@ -11,4 +11,4 @@ else
     echo "already runing....."
 fi
 #####
-node main.js 10
+node main.js 30
