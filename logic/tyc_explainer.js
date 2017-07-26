@@ -196,6 +196,8 @@ class MethodStep3 extends explainer.MethodBase {
                 callback(null);
             } else {
                 log._logR('Method::Step3','Fetching next detail url:',ue.url_,ue.index_,'/',self.detail_url_num_);
+                if( ue.index_ == self.detail_url_num_ )
+                    self.finish(cb_parent);
                 callback(null);
             }
         };
