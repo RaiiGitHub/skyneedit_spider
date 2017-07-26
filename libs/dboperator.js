@@ -41,7 +41,7 @@ class DbOperator {
             && DbOperator.static_connections_.length > 1) {
             var random_index = Math.floor(Math.random() * 10) % DbOperator.static_connections_.length;
             this.connection_ = DbOperator.static_connections_[random_index];
-            console.log('multi connection!', 'connect pool...');
+            //console.log('multi connection!', 'connect pool...');
         }
         if (null == this.connection_) {
             log._logE('Mysql::ensureTablesExist', 'no connection');

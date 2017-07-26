@@ -5,6 +5,10 @@ git push
 //fetch and merge
 git fetch origin
 git merge origin
+
+git reset --hard HEAD
+chmod 777 *.sh
+
 //other methods:
 1.  安装完成后，在开始菜单里找到“Git”->“Git Bash”
 2.  git config --global user.name "Your Name"

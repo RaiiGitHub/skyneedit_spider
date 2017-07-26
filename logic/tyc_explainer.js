@@ -191,9 +191,11 @@ class MethodStep3 extends explainer.MethodBase {
         var handlefunc = function () {
             up.stamp();
             if (up.empty()) {
+                log._logR('Method::Step3','No more detail urls...');
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
+                log._logR('Method::Step3','Fetching next detail url:',ue.url_,ue.index_);
                 callback(null);
             }
         };
@@ -223,6 +225,10 @@ class MethodStep3 extends explainer.MethodBase {
                         handlefunc();
                     }
                 }, up.statistics());
+            }else{
+                log._logE('Method::Step3', 'Fetching Error...','Redo again...');
+                up.add(ue);
+                self.sub(callback, cb_parent);
             }
         });
     }
