@@ -2,7 +2,7 @@
 echo "will run the fetching program(tianyc.node.js)..."
 cd /data/tianyc
 #!/bin/sh
-TYC=`ps -fe|grep tianyc |grep -v grep|wc -l|awk '{print $1}'`
+TYC=`ps -fe|grep main_tianyc |grep -v grep|wc -l|awk '{print $1}'`
 echo $TYC
 if (($TYC < 30))
 then
