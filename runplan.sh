@@ -4,7 +4,7 @@ cd /data/tianyc
 #!/bin/sh
 TYC=`ps -fe|grep tianyc |grep -v grep|wc -l|awk '{print $1}'`
 echo $TYC
-if (($TYC < 31))
+if (($TYC < 30))
 then
     echo "clean processes....."
 	PROCESS=`ps -ef|grep main_tianyc|grep -v grep|grep -v PPID|awk '{ print $2}'`
@@ -15,7 +15,7 @@ then
     done
     echo "clean proxy....."
     node main_releaseproxy.js
+    node main_tianyc.js 30
 fi
 echo "start main_tianyc.js in 30 process....."
 #####
-node main.js 30
