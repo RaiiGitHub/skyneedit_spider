@@ -32,6 +32,7 @@ if (cluster.isMaster) {
     if (!err) {
       var process_num = process_args[0];
       search_key_index_offset = parseInt(buf, 10);
+      search_key_index_offset++;
       //var numCPUs = require('os').cpus().length;
       var worker_tasks = process_num;
       for (var i = 0; i < process_num; i++) {
@@ -46,7 +47,7 @@ if (cluster.isMaster) {
           } else if (msg.next) {
             search_key_index_offset++;
             fs.writeFile('./sko.txt', search_key_index_offset, function (err) {
-              console.log('Main::Next', 'Ready go oto the next...');
+              console.log('Main::Next', 'Ready to go to the next...');
               wp.send({ offset: search_key_index_offset });
             });
           }
