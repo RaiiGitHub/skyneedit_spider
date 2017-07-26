@@ -32,6 +32,8 @@ if (cluster.isMaster) {
     if (!err) {
       var process_num = process_args[0];
       search_key_index_offset = parseInt(buf, 10);
+      search_key_index_offset -= process_num;
+      search_key_index_offset = Math.max(0,search_key_index_offset);
       //var numCPUs = require('os').cpus().length;
       var worker_tasks = process_num;
       for (var i = 0; i < process_num; i++) {
