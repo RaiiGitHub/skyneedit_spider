@@ -5,6 +5,8 @@ git push
 //fetch and merge
 git fetch origin
 git merge origin
+crontab -e
+0 0 * 7 * nohup /data/tianyc/runplan.sh &
 
 git reset --hard HEAD
 chmod 777 *.sh
