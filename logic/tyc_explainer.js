@@ -195,7 +195,7 @@ class MethodStep3 extends explainer.MethodBase {
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
-                log._logR('Method::Step3','Fetching next detail url:',ue.url_,ue.index_);
+                log._logR('Method::Step3','Fetching next detail url:',ue.url_,ue.index_,'/',self.detail_url_num_);
                 callback(null);
             }
         };
@@ -249,6 +249,7 @@ class MethodStep3 extends explainer.MethodBase {
             self.finish(callback);
             return;
         }
+        self.detail_url_num_ = up.container_.length;
 
         //check whether exists sub tasks.
         if (0 < up.container_.length) {
