@@ -17,7 +17,7 @@ class MethodStep1 extends explainer.MethodBase {
         var ue = self.explainer_.emitter_.urlentity_;
         var proxy = self.explainer_.emitter_.porxy_vistor_;
         var request = proxy.request_;
-        var decode_key = urlentity.decodeUrl(ue.key_);
+        //var decode_key = urlentity.decodeUrl(ue.key_);
         var options = {
             url: ue.url_,
             headers: {
@@ -26,7 +26,7 @@ class MethodStep1 extends explainer.MethodBase {
             }
         };
         log._logR('Method::Step1', 'begin...');
-        log._logR('Method::Step1', decode_key);
+        //log._logR('Method::Step1', decode_key);
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function () {
                 self.execute(callback);//redo again.
@@ -93,7 +93,7 @@ class MethodStep2 extends explainer.MethodBase {
         var ue = up.popFront();
         var proxy = self.explainer_.emitter_.porxy_vistor_;
         var request = proxy.request_;
-        var decode_key = urlentity.decodeUrl(ue.key_);
+        //var decode_key = urlentity.decodeUrl(ue.key_);
         var options = {
             url: ue.url_,
             headers: {
@@ -101,7 +101,7 @@ class MethodStep2 extends explainer.MethodBase {
                 'Connection': 'keep-alive'
             }
         };
-        log._logR('Method::Step2', decode_key);
+        //log._logR('Method::Step2', decode_key);
         var handlefunc = function () {
             up.stamp();
             log._logR('Method::Step2', 'Cur Detail urls Changed:',
@@ -186,7 +186,7 @@ class MethodStep3 extends explainer.MethodBase {
         var ue = up.popFront();
         var proxy = self.explainer_.emitter_.porxy_vistor_;
         var request = proxy.request_;
-        var decode_key = urlentity.decodeUrl(ue.key_);
+        //var decode_key = urlentity.decodeUrl(ue.key_);
         var options = {
             url: ue.url_,
             headers: {
@@ -194,7 +194,7 @@ class MethodStep3 extends explainer.MethodBase {
                 'Connection': 'keep-alive'
             }
         };
-        log._logR('Method::Step3', decode_key);
+        //log._logR('Method::Step3', decode_key);
         var handlefunc = function () {
             up.stamp();
             if (up.empty()) {
