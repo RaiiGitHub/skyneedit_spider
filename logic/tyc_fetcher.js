@@ -71,6 +71,7 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
     const company_id_matcher = /((http|https):\/\/)(\S*)\/(\d+)/;
     var ok = false;
     var contents = $('.search_result_single');
+    var insertCount = 0;
     contents.each(function () {
         ok = true;
         var data_result = {};
@@ -86,7 +87,7 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
             .attr('href');
 
         var detail_url = data_result['company_detail_url'].match(company_id_matcher);
-        data_result['company_id'] = detail_url.length > 4?detail_url[4]:'not found.';
+        data_result['company_id'] = detail_url.length > 4 ? detail_url[4] : 'not found.';
 
         data_result['company_logo'] = $(this)
             .children('.mr20')
@@ -146,39 +147,43 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
         }
         //save to db
         data_result.key = url_entity.key_;
-        container.explainer_.emitter_.dboperator_.insertCompany(data_result, function (exist) {
-            if (exist) {
+        container.explainer_.emitter_.dboperator_.insertCompany(data_result, function (insert_ok) {
+            if (insert_ok) {
                 container.user_data_.add(new urlentity(
                     data_result['company_detail_url'],
                     container.user_data_.container_.length + 1,
                     printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])));
             }
+            insertCount++;
+            if (insertCount == contents.length) {
+                console.log('fetchBrief::container data-len:',
+                    container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
+                    page_data.datas.length);
+                export_datas = page_data;
+                //no write.
+                //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
+                //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
+                // fs.writeFile(url_file_name, html, function (err) {
+                //     if (err) throw err;
+                //     log._logR('fetching brief', 'saving to', url_file_name);
+                // });
+                // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
+                //     if (err) throw err;
+                //     log._logR('fetching brief', 'saving to', result_file_name);
+                // });
+                log._logR('fetching brief', 'finished...');
+                if (callback) {
+                    callback(true);
+                }
+            }
         });
     });
-    export_datas = page_data;
-    if (ok) {
-        //not write.
-
-        //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
-        //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
-
-        // fs.writeFile(url_file_name, html, function (err) {
-        //     if (err) throw err;
-        //     log._logR('fetching brief', 'saving to', url_file_name);
-        // });
-
-        // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
-        //     if (err) throw err;
-        //     log._logR('fetching brief', 'saving to', result_file_name);
-        // });
-        log._logR('fetching brief', 'finished...');
-    }
-    else {
+    if (!ok) {
         log._logR('fetching brief', 'failed.', page_data.index, page_data.url);
         log._logE('fetching brief', 'failed.', page_data.index, page_data.url);
-    }
-    if (callback) {
-        callback(ok);//the visit may be rejected.
+        if (callback) {
+            callback(false);//the visit may be rejected.
+        }
     }
 }
 

@@ -62,8 +62,7 @@ class MethodStep1 extends explainer.MethodBase {
                             var export_datas = null;
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
-                                    self.next_.user_data_ && self.next_.user_data_.container_ ?
-                                        self.next_.user_data_.container_.length : 0);
+                                    self.next_.user_data_ ? self.next_.user_data_.size() : 0);
                                 self.finish(callback);
                             });
                             break;
@@ -74,8 +73,7 @@ class MethodStep1 extends explainer.MethodBase {
                             var export_datas = null;
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
-                                    self.next_.user_data_ && self.next_.user_data_.container_ ?
-                                        self.next_.user_data_.container_.length : 0);
+                                    self.next_.user_data_ ? self.next_.user_data_.size() : 0);
                                 self.finish(callback);
                             });
                             break;
@@ -107,7 +105,7 @@ class MethodStep2 extends explainer.MethodBase {
         var handlefunc = function () {
             up.stamp();
             log._logR('Method::Step2', 'Cur Detail urls Changed:',
-                self.user_data_ && self.user_data_.container_ ? self.user_data_.container_.length : 0);
+                self.user_data_ ? self.user_data_.size() : 0);
             if (up.empty()) {
                 self.finish(cb_parent);//notify parent.
                 callback(null);
@@ -148,7 +146,7 @@ class MethodStep2 extends explainer.MethodBase {
     execute(callback) {
         //build task async
         log._logR('Method::Step2', 'Cur Detail urls Changed:',
-            this.user_data_ && this.user_data_.container_ ? this.user_data_.container_.length : 0);
+            this.user_data_?this.user_data_.size() : 0);
         if (null == this.pre_) {
             log._logE('Method::Step2', 'No previous method.');
             log._logR('Method::Step2', 'No previous method.');

@@ -472,6 +472,7 @@ class DbOperatorTYC extends dbop {
         self.verifyCompanyExists(desc.company_id, function (exists) {
             if (exists) {
                 log._logE('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
+                console.log('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
                 callback(false);
             } else {
                 var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) values('%s','%s','%s','%s','%s',NOW());",

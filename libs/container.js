@@ -11,6 +11,9 @@ class ContainerBase{
         }
         return false;
     }
+    size(){
+        return this.container_.length;
+    }
     add(ele,arg){
         if( (arguments[1] ? arguments[1] : true) 
             && this.check(ele) )
