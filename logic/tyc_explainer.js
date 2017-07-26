@@ -199,8 +199,7 @@ class MethodStep3 extends explainer.MethodBase {
             up.stamp();
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
-                self.finish(cb_parent);//notify parent.
-                callback(null);
+                self.finish(callback);//notify parent.
             } else {
                 log._logR('Method::Step3', 'Fetching next detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
                 if (ue.index_ == self.detail_url_num_)
