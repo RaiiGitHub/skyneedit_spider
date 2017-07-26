@@ -32,7 +32,6 @@ if (cluster.isMaster) {
     if (!err) {
       var process_num = process_args[0];
       search_key_index_offset = parseInt(buf, 10);
-      search_key_index_offset++;
       //var numCPUs = require('os').cpus().length;
       var worker_tasks = process_num;
       for (var i = 0; i < process_num; i++) {
@@ -52,13 +51,16 @@ if (cluster.isMaster) {
             });
           }
         });
-        wp.send({ offset: search_key_index_offset });
+        wp.send({ begin: true });
       }
     }
   })
 } else {
   process.on('message', function (msg) {
-    if (msg.offset) {
+    if (msg.begin){
+      process.send({next:true});
+    }
+    else if (msg.offset) {
       var db = new dbop();
       db.config();
       db.getSearchKeys(msg.offset, 1, function (results) {
