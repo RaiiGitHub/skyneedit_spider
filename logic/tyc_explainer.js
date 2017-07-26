@@ -61,6 +61,9 @@ class MethodStep1 extends explainer.MethodBase {
                             log._logR('Method::Step1', 'Found 1 page in', ue.url_);
                             var export_datas = null;
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
+                                log._logR('Method::Step1', 'Cur Detail urls Changed:',
+                                    self.next_.user_data_ && self.next_.user_data_.container_ ?
+                                        self.next_.user_data_.container_.length : 0);
                                 self.finish(callback);
                             });
                             break;
@@ -70,6 +73,9 @@ class MethodStep1 extends explainer.MethodBase {
                             //fetch the first page as well.
                             var export_datas = null;
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
+                                log._logR('Method::Step1', 'Cur Detail urls Changed:',
+                                    self.next_.user_data_ && self.next_.user_data_.container_ ?
+                                        self.next_.user_data_.container_.length : 0);
                                 self.finish(callback);
                             });
                             break;
@@ -100,6 +106,8 @@ class MethodStep2 extends explainer.MethodBase {
         log._logR('Method::Step2', decode_key);
         var handlefunc = function () {
             up.stamp();
+            log._logR('Method::Step2', 'Cur Detail urls Changed:',
+                self.user_data_ && self.user_data_.container_ ? self.user_data_.container_.length : 0);
             if (up.empty()) {
                 self.finish(cb_parent);//notify parent.
                 callback(null);
@@ -139,7 +147,8 @@ class MethodStep2 extends explainer.MethodBase {
     }
     execute(callback) {
         //build task async
-        log._logR('Method::Step2', 'begin...');
+        log._logR('Method::Step2', 'Cur Detail urls Changed:',
+            this.user_data_ && this.user_data_.container_ ? this.user_data_.container_.length : 0);
         if (null == this.pre_) {
             log._logE('Method::Step2', 'No previous method.');
             log._logR('Method::Step2', 'No previous method.');
@@ -191,12 +200,12 @@ class MethodStep3 extends explainer.MethodBase {
         var handlefunc = function () {
             up.stamp();
             if (up.empty()) {
-                log._logR('Method::Step3','No more detail urls...');
+                log._logR('Method::Step3', 'No more detail urls...');
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
-                log._logR('Method::Step3','Fetching next detail url:',ue.url_,ue.index_,'/',self.detail_url_num_);
-                if( ue.index_ == self.detail_url_num_ )
+                log._logR('Method::Step3', 'Fetching next detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
+                if (ue.index_ == self.detail_url_num_)
                     self.finish(cb_parent);
                 callback(null);
             }
@@ -227,8 +236,8 @@ class MethodStep3 extends explainer.MethodBase {
                         handlefunc();
                     }
                 }, up.statistics());
-            }else{
-                log._logE('Method::Step3', 'Fetching Error...','Redo again...');
+            } else {
+                log._logE('Method::Step3', 'Fetching Error...', 'Redo again...');
                 up.add(ue);
                 self.sub(callback, cb_parent);
             }
