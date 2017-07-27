@@ -14,12 +14,18 @@ class ContainerBase{
     size(){
         return this.container_.length;
     }
-    add(ele,arg){
+    add(ele){
         if( (arguments[1] ? arguments[1] : true) 
             && this.check(ele) )
             return false;
         this.container_.push(ele);
         return true;
+    }
+    insert(ele,index){
+        if( (arguments[2] ? arguments[2] : true) 
+            && this.check(ele) )
+            return false;
+        this.container_.splice(index,0,ele);
     }
     popBack(){
         if( 0 < this.container_.length ){

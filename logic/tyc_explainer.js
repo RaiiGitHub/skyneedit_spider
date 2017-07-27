@@ -80,6 +80,10 @@ class MethodStep1 extends explainer.MethodBase {
                         }
                     }
                 });
+            }else{
+                //redo again.
+                log._logR('Method::Step1', 'Fetching Failed.','Redo again.');
+                execute(callback);
             }
         });
     }
@@ -114,8 +118,9 @@ class MethodStep2 extends explainer.MethodBase {
             }
         };
         var refreshproxy = function () {
-            if (!proxy.refreshVisitor(null, function () {
-                up.add(ue);//reinput.
+            if (!proxy.refreshVisitor(null, function (limit) {
+                up.insert(ue, 0);//reinput.
+                log._logE('Method::Step2', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
@@ -140,13 +145,18 @@ class MethodStep2 extends explainer.MethodBase {
                         handlefunc();
                     }
                 }, up.statistics());
+            } else {
+                //need to redo again...
+                log._logE('Method::Step2', 'Fetching Error...', 'Redo again...');
+                up.insert(ue, 0);//reinput.
+                self.sub(callback, cb_parent);;
             }
         });
     }
     execute(callback) {
         //build task async
         log._logR('Method::Step2', 'Cur Detail urls Changed:',
-            this.user_data_?this.user_data_.size() : 0);
+            this.user_data_ ? this.user_data_.size() : 0);
         if (null == this.pre_) {
             log._logE('Method::Step2', 'No previous method.');
             log._logR('Method::Step2', 'No previous method.');
@@ -170,7 +180,6 @@ class MethodStep2 extends explainer.MethodBase {
                 });
             }
             async.waterfall(tasks, function (err, result) {
-                //need to be done in the callback funcions.
             });
         } else {
             callback(null);
@@ -208,8 +217,9 @@ class MethodStep3 extends explainer.MethodBase {
             }
         };
         var refreshproxy = function () {
-            if (!proxy.refreshVisitor(null, function () {
-                up.add(ue);
+            if (!proxy.refreshVisitor(null, function (limit) {
+                up.insert(ue, 0);
+                log._logE('Method::Step3', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
@@ -235,7 +245,7 @@ class MethodStep3 extends explainer.MethodBase {
                 }, up.statistics());
             } else {
                 log._logE('Method::Step3', 'Fetching Error...', 'Redo again...');
-                up.add(ue);
+                up.insert(ue, 0);
                 self.sub(callback, cb_parent);
             }
         });

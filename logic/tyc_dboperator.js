@@ -8,8 +8,8 @@ const log = require('../libs/log');
 
 class DbOperatorTYC extends dbop {
     constructor() {
-        super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        //super('localhost', 'root', 'mysql', 'tianyancha');
+        //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
+        super('localhost', 'root', 'mysql', 'tianyancha');
     }
     ensureDbExist(callback) {
         //warning! if call this, it should be called before connecting.
@@ -20,7 +20,9 @@ class DbOperatorTYC extends dbop {
         });
         var db_name = 'CREATE DATABASE IF NOT EXISTS `tianyancha`;'
         var self = this;
+        console.log(db_name);
         con.query(db_name, function (error, results, fields) {
+            console.log('no return...');
             if (error) {
                 log._logE('Mysql::ensureDbExist', 'create tianyancha failed.', db_name);
                 callback(false);
@@ -50,7 +52,7 @@ class DbOperatorTYC extends dbop {
                         `detailDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
                         `html` LONGTEXT NULL COMMENT '详情页面内容', \
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间',\
-                        foreign key(fid) references enterprise_base(id));";
+                        foreign key(fid) references enterprise_base(id) ON DELETE CASCADE ON UPDATE RESTRICT);";
 
         var search_keys = "CREATE TABLE IF NOT EXISTS `search_keys`(\
                         `id` int auto_increment primary key COMMENT '自增长的键值',\
@@ -129,7 +131,7 @@ class DbOperatorTYC extends dbop {
         var line_index = 0;
         lr.eachLine(filepath, function (line, last) {
             line_index++;
-            if (matchobj.from && matchobj.from < line_index) {
+            if (null != matchobj.from && matchobj.from < line_index) {
                 var key = line.match(matchobj.match)[matchobj.index.key];
                 var memo = line.match(matchobj.match)[matchobj.index.memo];
                 skeys.push({ key: key, memo: memo });
@@ -191,7 +193,7 @@ class DbOperatorTYC extends dbop {
             if (!error && results.length > 0) {
                 callback(results);
             } else {
-                log._logE('Mysql::getSearchKeys', q, error.stack);
+                console.log('Mysql::getSearchKeys', q, error);
                 callback(null);
             }
         });
@@ -270,7 +272,6 @@ class DbOperatorTYC extends dbop {
             }
         })
     }
-
     insertCompanyPage(desc, html, callback) {
         if (!this.check()) {
             callback(false);

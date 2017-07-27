@@ -13,7 +13,6 @@ log.init('./datas/logs', 'NORMAL', 'Windows', 'TYCFetcher');
 if (cluster.isMaster) {
   var search_key_index = 1;
   process.on('SIGINT', function () {
-    exit = true;
     log._logR('Main::Exit', 'Got SIGINT.  Release all proxies before exiting...');
     pv.releaseAllProxies(function () {
       log._logR('Main::Exit', 'Bye.');
@@ -33,7 +32,7 @@ if (cluster.isMaster) {
       var process_num = process_args[0];
       search_key_index_offset = parseInt(buf, 10);
       search_key_index_offset -= process_num;
-      search_key_index_offset = Math.max(0,search_key_index_offset);
+      search_key_index_offset = Math.max(0, search_key_index_offset);
       //var numCPUs = require('os').cpus().length;
       var worker_tasks = process_num;
       for (var i = 0; i < process_num; i++) {
@@ -59,8 +58,8 @@ if (cluster.isMaster) {
   })
 } else {
   process.on('message', function (msg) {
-    if (msg.begin){
-      process.send({next:true});
+    if (msg.begin) {
+      process.send({ next: true });
     }
     else if (msg.offset) {
       var db = new dbop();
@@ -73,12 +72,18 @@ if (cluster.isMaster) {
             new dbop,
             new urlentity(printf('http://www.tianyancha.com/search?key=%s', urlentity.encodeUrl(k)), 1, k)
           );
-          e.emit(true, function () {
-            log._logR('Main::finished', 'one.');
-            process.send({next:true});
+          e.emit(true, function (succeed) {
+            if (succeed) {
+              log._logR('Main::finished', process.pid, 'Toggle to next.');
+              process.send({ next: true });
+            } else {
+              //failed...
+              log._logR('Main::Failed', process.pid, 'Bye.');
+              process.send({ nomoredata: true });
+            }
           });
-        }else{
-          process.send({nomoredata:true});//no more datas.
+        } else {
+          process.send({ nomoredata: true });//no more datas.
         }
       });
     }
