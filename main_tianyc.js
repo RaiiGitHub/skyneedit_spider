@@ -72,14 +72,14 @@ if (cluster.isMaster) {
             new dbop,
             new urlentity(printf('http://www.tianyancha.com/search?key=%s', urlentity.encodeUrl(k)), 1, k)
           );
-          e.emit(true, function (succeed) {
-            if (succeed) {
-              log._logR('Main::finished', process.pid, 'Toggle to next.');
-              process.send({ next: true });
-            } else {
+          e.emit(true, function (failed) {
+            if (failed) {
               //failed...
               log._logR('Main::Failed', process.pid, 'Bye.');
               process.send({ nomoredata: true });
+            } else {
+              log._logR('Main::finished', process.pid, 'Toggle to next.');
+              process.send({ next: true });
             }
           });
         } else {
