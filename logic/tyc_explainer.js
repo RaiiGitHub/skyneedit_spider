@@ -82,8 +82,8 @@ class MethodStep1 extends explainer.MethodBase {
                 });
             }else{
                 //redo again.
-                log._logR('Method::Step1', 'Fetching Failed.','Redo again.');
-                execute(callback);
+                log._logR('Method::Step1', 'Fetching Failed.','Redo again,refreshing first...');
+                refreshproxy();
             }
         });
     }
@@ -147,9 +147,8 @@ class MethodStep2 extends explainer.MethodBase {
                 }, up.statistics());
             } else {
                 //need to redo again...
-                log._logE('Method::Step2', 'Fetching Error...', 'Redo again...');
-                up.insert(ue, 0);//reinput.
-                self.sub(callback, cb_parent);;
+                log._logE('Method::Step2', 'Fetching Error...', 'Redo again,refreshing first...');
+                refreshproxy();
             }
         });
     }
@@ -244,9 +243,8 @@ class MethodStep3 extends explainer.MethodBase {
                     }
                 }, up.statistics());
             } else {
-                log._logE('Method::Step3', 'Fetching Error...', 'Redo again...');
-                up.insert(ue, 0);
-                self.sub(callback, cb_parent);
+                log._logE('Method::Step3', 'Fetching Error...', 'Redo again,refreshing first...');
+                refreshproxy();
             }
         });
     }
