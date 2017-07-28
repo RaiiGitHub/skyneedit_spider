@@ -11,7 +11,6 @@ class MethodBase{
     }
     finish(callback) {
         if (0 <= this.type_.indexOf('final')) {
-            this.explainer_.emitter_.porxy_vistor_.releaseVisitor();
             if( this.explainer_.emitter_.notify_done_ )
                 this.explainer_.emitter_.notify_done_();
         }

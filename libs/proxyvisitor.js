@@ -27,7 +27,7 @@ class ProxyVisitor {
     initVisitor(callback) {
         var self = this;
         if (self.useproxy_) {
-            if( sefl.request_lock_ ){//using last request.
+            if( self.request_lock_ ){//using last request.
                 if( callback )
                     callback();
                 return;
