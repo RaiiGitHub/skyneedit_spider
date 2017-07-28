@@ -60,7 +60,6 @@ class ProxyVisitor {
                     fs.writeFile(printf('./datas/proxycache/%s.proxy', self.guid_), body, function (err) {
                         if (err)
                             console.log(err);
-                        self.request_lock_ = true;//lock the request.
                     });
                     if (callback)
                         callback();
