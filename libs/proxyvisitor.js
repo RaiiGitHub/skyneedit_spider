@@ -20,14 +20,15 @@ class ProxyVisitor {
         this.body_ = null;
         this.useproxy_ = true;
         this.request_ = request;
-        this.request_lock_ = false;
         this.guid_ = guid.gen();
         this.request_try_limit_ = 0;
+        ProxyVisitor.static_request_ = request;
     }
     initVisitor(callback) {
         var self = this;
         if (self.useproxy_) {
-            if( self.request_lock_ ){//using last request.
+            if( ProxyVisitor.static_request_){//using last request.
+                this.request_ = ProxyVisitor.static_request_;
                 if( callback )
                     callback();
                 return;
@@ -38,7 +39,7 @@ class ProxyVisitor {
                     if ('0' == b.status) {
                         log._logR('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
                         self.request_try_limit_++;
-                        if( self.request_try_limit_ > 20 ){
+                        if( self.request_try_limit_ > 5000 ){
                             log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignore.');
                             if( callback )
                                 callback({limit:true});
@@ -75,6 +76,7 @@ class ProxyVisitor {
         this.request_ = this.useproxy_ ? request
             .defaults({ 'proxy': printf('http://rola:5227@%s:%s', this.proxyip_, this.port_) })
             : request;
+        ProxyVisitor.static_request_ = this.request_;
         return this.request_;
     }
     refreshVisitor(visitor, callback) {
@@ -83,7 +85,7 @@ class ProxyVisitor {
             log._logR('Proxy', 'Proxy using denined.');
             return false;
         }
-        self.request_lock_ = false;//unlock the request.
+        ProxyVisitor.static_request_ = null;
         self.body_ ? self.releaseVisitor(visitor) : log._logR('Proxy', 'no need to refresh...');
         setTimeout(function() {
             self.initVisitor(callback);
