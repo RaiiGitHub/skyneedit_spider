@@ -47,6 +47,7 @@ class ProxyVisitor {
                     self.serverip_ = b.data.serverip;
                     self.wanip_ = b.data.wanip;
                     self.body_ = body;
+                    self.request_try_limit_ = 0;//reset.
                     self.getProxyRequester();
                     //write it to cache file
                     fs.writeFile(printf('./datas/proxycache/%s.proxy', self.guid_), body, function (err) {
