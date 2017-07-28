@@ -38,6 +38,7 @@ if (cluster.isMaster) {
       for (var i = 0; i < process_num; i++) {
         var wp = cluster.fork();
         wp.on('message', function (msg) {
+          var wp_ = this;
           if (msg.nomoredata) {
             worker_tasks--;
             if (0 >= worker_tasks) {
@@ -47,8 +48,8 @@ if (cluster.isMaster) {
           } else if (msg.next) {
             search_key_index_offset++;
             fs.writeFile('./sko.txt', search_key_index_offset, function (err) {
-              console.log('Main::Next', wp.pid,'Ready to go to the next...');
-              wp.send({ offset: search_key_index_offset });
+              console.log('Main::Next', wp_.id,wp_.process.pid,'Ready to go to the next,next is',search_key_index_offset);
+              wp_.send({ offset: search_key_index_offset });
             });
           }
         });
