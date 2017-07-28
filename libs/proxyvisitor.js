@@ -20,12 +20,18 @@ class ProxyVisitor {
         this.body_ = null;
         this.useproxy_ = true;
         this.request_ = request;
+        this.request_lock_ = false;
         this.guid_ = guid.gen();
         this.request_try_limit_ = 0;
     }
     initVisitor(callback) {
         var self = this;
         if (self.useproxy_) {
+            if( sefl.request_lock_ ){//using last request.
+                if( callback )
+                    callback();
+                return;
+            }
             request(proxyUrl, function (error, response, body) {
                 if (!error && 200 == response.statusCode) {
                     var b = JSON.parse(body);
@@ -53,6 +59,7 @@ class ProxyVisitor {
                     fs.writeFile(printf('./datas/proxycache/%s.proxy', self.guid_), body, function (err) {
                         if (err)
                             console.log(err);
+                        self.request_lock_ = true;//lock the request.
                     });
                     if (callback)
                         callback();
@@ -76,10 +83,11 @@ class ProxyVisitor {
             log._logR('Proxy', 'Proxy using denined.');
             return false;
         }
+        self.request_lock_ = false;//unlock the request.
         self.body_ ? self.releaseVisitor(visitor) : log._logR('Proxy', 'no need to refresh...');
         setTimeout(function() {
             self.initVisitor(callback);
-        }, 500);
+        }, 10);
         return true;
     }
     releaseVisitor(visitor) {
