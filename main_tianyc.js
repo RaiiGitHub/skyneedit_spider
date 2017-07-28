@@ -47,7 +47,7 @@ if (cluster.isMaster) {
           } else if (msg.next) {
             search_key_index_offset++;
             fs.writeFile('./sko.txt', search_key_index_offset, function (err) {
-              console.log('Main::Next', 'Ready to go to the next...');
+              console.log('Main::Next', wp.pid,'Ready to go to the next...');
               wp.send({ offset: search_key_index_offset });
             });
           }
@@ -63,6 +63,7 @@ if (cluster.isMaster) {
     }
     else if (msg.offset) {
       log.processID = process.pid;
+      log._logR('Main::Log',log.processID,'Ready to log...');
       var db = new dbop();
       db.config();
       db.getSearchKeys(msg.offset, 1, function (results) {
