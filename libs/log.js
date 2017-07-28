@@ -63,7 +63,8 @@ class Log {
             other += ' ';
             other += arguments[a];
         }
-        var txt = `[${now}]${type}: ${msg}${other} \r\n`;
+        var pid = null != Log.processID?Log.processID:0;
+        var txt = `[${now}]-${pid}-${type}: ${msg}${other} \r\n`;
         if (Log.basePath) {
             //log按照日期存储
             let path = this.ensureFileSync("runtime");
@@ -86,7 +87,8 @@ class Log {
             other += ', ';
             other += arguments[a];
         }
-        var txt = `[${now}]${type}: ${msg}${other} \r\n`;
+        var pid = null != Log.processID?Log.processID:0;
+        var txt = `[${now}]-${pid}-${type}: ${msg}${other} \r\n`;
         //发到日志系统 send(logid, level, tag, content, type) {
         //Log.cslog.send(Log.currentLogId, type, "", msg);
 

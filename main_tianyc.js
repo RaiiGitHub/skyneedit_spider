@@ -62,6 +62,7 @@ if (cluster.isMaster) {
       process.send({ next: true });
     }
     else if (msg.offset) {
+      log.processID = process.pid;
       var db = new dbop();
       db.config();
       db.getSearchKeys(msg.offset, 1, function (results) {

@@ -32,7 +32,7 @@ class ProxyVisitor {
                     if ('0' == b.status) {
                         log._logR('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
                         self.request_try_limit_++;
-                        if( self.request_try_limit_ > 10 ){
+                        if( self.request_try_limit_ > 1000 ){
                             log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignore.');
                             if( callback )
                                 callback({limit:true});
