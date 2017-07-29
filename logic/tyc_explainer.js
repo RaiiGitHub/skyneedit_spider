@@ -163,7 +163,6 @@ class MethodStep2 extends explainer.MethodBase {
             return;
         }
         var up = this.pre_.user_data_;
-        var up = this.pre_.user_data_;
         if (null == up) {
             log._logE('Method::Step2', 'visit denined.');
             log._logR('Method::Step2', 'visit denined.');

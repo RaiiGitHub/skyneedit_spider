@@ -37,7 +37,7 @@ class ProxyVisitor {
                 if (!error && 200 == response.statusCode) {
                     var b = JSON.parse(body);
                     if ('0' == b.status) {
-                        log._logR('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
+                        console.log('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
                         self.request_try_limit_++;
                         if( self.request_try_limit_ > 5000 ){
                             log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignore.');
