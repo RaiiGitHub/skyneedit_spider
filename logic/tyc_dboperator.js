@@ -51,7 +51,7 @@ class DbOperatorTYC extends dbop {
                         `id` int auto_increment primary key COMMENT '自增长的键值',\
                         `fid` int NOT NULL COMMENT '外键（表enterprise_base）',\
                         `detailDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
-                        `html` LONGTEXT NULL COMMENT '详情页面内容', \
+                        `html` MEDIUMTEXT NULL COMMENT '详情页面内容', \
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间',\
                         foreign key(fid) references enterprise_base(id) ON DELETE CASCADE ON UPDATE RESTRICT);";
 
@@ -284,7 +284,7 @@ class DbOperatorTYC extends dbop {
         var self = this;
         self.verifyCompanyPageExists(desc.company_id, function (exists) {
             if (exists) {
-                log._logE('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
+                log._logE('Mysql::insertCompanyPage', 'company code with', desc.company_id, 'already exists.');
                 callback(false);
             } else {
                 var fid = printf("(select id from enterprise_base where code='%s' limit 1)", desc.company_id);
@@ -295,7 +295,7 @@ class DbOperatorTYC extends dbop {
                     if (!error) {
                         callback(true);
                     } else {
-                        log._logE('Mysql::insertCompany', q, error.stack);
+                        log._logE('Mysql::insertCompanyPage', q, error.stack);
                         callback(false);
                     }
                 });

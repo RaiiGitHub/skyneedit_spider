@@ -192,7 +192,6 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
 function fetchDetail(container, export_datas, html, url_entity, callback) {
     var $ = cheerio.load(html);
     var detail_node_exist = $('.companyTitleBox55.pt20.pl30.pr30');
-    var ok = false;
     if (detail_node_exist.is('div')) {
 
         //not write...
@@ -208,13 +207,16 @@ function fetchDetail(container, export_datas, html, url_entity, callback) {
         var desc = {};
         desc.company_id = url_entity.key_.match(/(\S*)\.detail\.(\d+)\.(\S*)/)[2];
         //others to be explain.
-        container.explainer_.emitter_.dboperator_.insertCompanyPage(desc, html, function () { });
-        log._logR('fetching detail', 'finished', url_entity.key_);
-        ok = true;
-    }
-
-    if (callback) {
-        callback(ok);
+        container.explainer_.emitter_.dboperator_.insertCompanyPage(desc, html, function (insert_ok) {
+            log._logR('fetching detail', 'insert-', insert_ok, 'finished', url_entity.key_);
+            if (callback) {
+                callback(true);
+            }
+        });
+    } else {
+        if (callback) {
+            callback(false);
+        }
     }
 }
 

@@ -90,7 +90,7 @@ if (cluster.isMaster) {
               if (subtasks <= 0)
                 process.send({ nomoredata: true });
             } else {
-              log._logR('Main::finished', process.pid, 'Toggle to next.');
+              log._logR('Main::finished', process.pid, 'Toggle to next.next will be',msg.offset);
               process.send({ next: true });
             }
           });

@@ -94,10 +94,11 @@ class ProxyVisitor {
     releaseVisitor(visitor) {
         var self = visitor ? visitor : this;
         if (!self.useproxy_ || !self.body_) {
-            log._logR('Proxy', 'Proxy using denined.')
+            log._logR('Proxy', 'Proxy using denined,may released already.')
             return;
         }
         ProxyVisitor.releaseProxy(self.body_);
+        self.body_ = null;
         //delete proxy cache file
         fs.unlink(printf('./datas/proxycache/%s.proxy', self.guid_), function (err) {
             if (err)
