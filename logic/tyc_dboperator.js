@@ -9,8 +9,8 @@ const log = require('../libs/log');
 class DbOperatorTYC extends dbop {
     constructor() {
         //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        //super('localhost', 'root', 'admin111', 'tianyancha');
-        super('localhost', 'root', 'mysql', 'tianyancha');
+        super('localhost', 'root', 'admin111', 'tianyancha');
+        //super('localhost', 'root', 'mysql', 'tianyancha');
     }
     ensureDbExist(callback) {
         //warning! if call this, it should be called before connecting.
