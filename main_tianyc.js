@@ -62,6 +62,7 @@ if (cluster.isMaster) {
 } else {
   var subtasks = 0;
   var db = new dbop();
+  var proxyvistor = new proxyvistor;
   db.config();
   process.on('message', function (msg) {
     if (msg.begin) {
@@ -78,7 +79,7 @@ if (cluster.isMaster) {
           var k = results[0].searchKey;
           var e = new emitter(
             db,
-            pv,
+            proxyvistor,
             new explainer,
             new urlentity(printf('http://www.tianyancha.com/search?key=%s', urlentity.encodeUrl(k)), 1, k)
           );
