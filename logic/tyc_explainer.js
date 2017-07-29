@@ -74,15 +74,20 @@ class MethodStep1 extends explainer.MethodBase {
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
                                     self.next_.user_data_ ? self.next_.user_data_.size() : 0);
-                                self.finish(callback);
+                                if (ok)
+                                    self.finish(callback);
+                                else {
+                                    log._logR('Method::Step1', 'Fetching Failed.', 'May be rejected by the server,refreshing first...');
+                                    refreshproxy();
+                                }
                             });
                             break;
                         }
                     }
                 });
-            }else{
+            } else {
                 //redo again.
-                log._logR('Method::Step1', 'Fetching Failed.','Redo again,refreshing first...');
+                log._logR('Method::Step1', 'Fetching Failed.', 'Redo again,refreshing first...');
                 refreshproxy();
             }
         });
@@ -120,7 +125,7 @@ class MethodStep2 extends explainer.MethodBase {
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function (limit) {
                 up.insert(ue, 0);//reinput.
-                log._logE('Method::Step2', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
+                log._logE('Method::Step2', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
@@ -217,7 +222,7 @@ class MethodStep3 extends explainer.MethodBase {
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function (limit) {
                 up.insert(ue, 0);
-                log._logE('Method::Step3', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
+                log._logE('Method::Step3', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
