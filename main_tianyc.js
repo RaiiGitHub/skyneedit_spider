@@ -77,8 +77,9 @@ if (cluster.isMaster) {
         if (results) {
           var k = results[0].searchKey;
           var e = new emitter(
-            new explainer,
             db,
+            pv,
+            new explainer,
             new urlentity(printf('http://www.tianyancha.com/search?key=%s', urlentity.encodeUrl(k)), 1, k)
           );
           e.emit(false, function (failed) {

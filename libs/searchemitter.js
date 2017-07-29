@@ -1,13 +1,12 @@
 "use strict";
-const proxyvisitor = require('./proxyvisitor');
 class SearchEmitter {
     //emit all jobs.
     //explainer should be set outside.
-    constructor(explainer, dboperator, urlentity) {
-        this.urlentity_ = urlentity;
-        this.porxy_vistor_ = new proxyvisitor;
-        this.explainer_ = explainer;
+    constructor(dboperator,proxyvisitor,explainer, urlentity) {
         this.dboperator_ = dboperator;
+        this.porxy_vistor_ = proxyvisitor;
+        this.explainer_ = explainer;
+        this.urlentity_ = urlentity;
         this.notify_done_ = null;//function.
     }
 
