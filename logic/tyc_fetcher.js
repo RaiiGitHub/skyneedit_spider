@@ -86,7 +86,7 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
             .children('a')
             .attr('href');
         var cdu = data_result['company_detail_url'];
-        var detail_url = cdu?cdu.match(company_id_matcher):'';
+        var detail_url = cdu ? cdu.match(company_id_matcher) : '';
         data_result['company_id'] = detail_url.length > 4 ? detail_url[4] : 'not found.';
 
         data_result['company_logo'] = $(this)
@@ -155,30 +155,30 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
                         container.user_data_.container_.length + 1,
                         printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])));
                 }
-                insertCount++;
-                if (insertCount == contents.length) {
-                    console.log('fetchBrief::container data-len:',
-                        container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
-                        page_data.datas.length);
-                    export_datas = page_data;
-                    //no write.
-                    //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
-                    //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
-                    // fs.writeFile(url_file_name, html, function (err) {
-                    //     if (err) throw err;
-                    //     log._logR('fetching brief', 'saving to', url_file_name);
-                    // });
-                    // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
-                    //     if (err) throw err;
-                    //     log._logR('fetching brief', 'saving to', result_file_name);
-                    // });
-                    log._logR('fetching brief', 'finished...');
-                    if (callback) {
-                        callback(true);
-                    }
-                }
             });
         });
+        insertCount++;
+        if (insertCount == contents.length) {
+            console.log('fetchBrief::container data-len:',
+                container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
+                page_data.datas.length);
+            export_datas = page_data;
+            //no write.
+            //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
+            //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
+            // fs.writeFile(url_file_name, html, function (err) {
+            //     if (err) throw err;
+            //     log._logR('fetching brief', 'saving to', url_file_name);
+            // });
+            // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
+            //     if (err) throw err;
+            //     log._logR('fetching brief', 'saving to', result_file_name);
+            // });
+            log._logR('fetching brief', 'finished...');
+            if (callback) {
+                callback(true);
+            }
+        }
     });
     if (!ok) {
         log._logR('fetching brief', 'failed.', page_data.index, page_data.url);
