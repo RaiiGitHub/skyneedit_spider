@@ -48,7 +48,7 @@ if (cluster.isMaster) {
               process.exit(0);
             }
           } else if (msg.next) {
-            fs.writeFile('./sko.txt', search_key_index_offset, function (err) {
+            fs.writeFile('./offset.txt', search_key_index_offset, function (err) {
               console.log('Main::Next', wp_.id, wp_.process.pid, 'Ready to go to the next,next is', search_key_index_offset);
               wp_.send({ offset: search_key_index_offset++ });
             });
