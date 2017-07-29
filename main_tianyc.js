@@ -82,7 +82,7 @@ if (cluster.isMaster) {
             new explainer,
             new urlentity(printf('http://www.tianyancha.com/search?key=%s', urlentity.encodeUrl(k)), 1, k)
           );
-          e.emit(false, function (failed) {
+          e.emit(true, function (failed) {
             if (failed) {
               //failed...
               log._logR('Main::Failed', process.pid, 'subtask index:', subtasks--, 'Bye.');
