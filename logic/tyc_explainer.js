@@ -63,7 +63,12 @@ class MethodStep1 extends explainer.MethodBase {
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
                                     self.next_.user_data_ ? self.next_.user_data_.size() : 0);
-                                self.finish(callback);
+                                if (ok)
+                                    self.finish(callback);
+                                else {
+                                    log._logR('Method::Step1', 'Fetching Failed.', 'May be rejected by the server,refreshing first...');
+                                    refreshproxy();
+                                }
                             });
                             break;
                         }
