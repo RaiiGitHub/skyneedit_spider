@@ -23,14 +23,15 @@ if (cluster.isMaster) {
   });
   var process_args = process.argv.splice(2);
   if (1 > process_args.length) {
-    log._logR('Main::EntryPoint', 'argument seperate num should be here.');
+    log._logR('Main::EntryPoint', 'argument workers should be here.');
     return;
   }
-  var sep = parseInt(process_args[0]);
+  var ws = parseInt(process_args[0]);
   var db = new dbop();
   db.config();
   db.getCompanyMaxID(function (id) {
-    log._logR('Main::Assign',id);
+    var sep = parseInt(id /ws);
+    log._logR('Main::Assign',ws,'*',sep);
     if (id) {
       var i = 1;
       for (;;) {
