@@ -61,8 +61,8 @@ if (cluster.isMaster) {
   })
 } else {
   var subtasks = 0;
-  var db = new dbop();
   var proxyvistor = new pv;
+  var db = new dbop();
   db.config();
   process.on('message', function (msg) {
     if (msg.begin) {

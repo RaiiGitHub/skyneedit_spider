@@ -27,9 +27,9 @@ class ProxyVisitor {
     initVisitor(callback) {
         var self = this;
         if (self.useproxy_) {
-            if( ProxyVisitor.static_request_){//using last request.
+            if (ProxyVisitor.static_request_) {//using last request.
                 this.request_ = ProxyVisitor.static_request_;
-                if( callback )
+                if (callback)
                     callback();
                 return;
             }
@@ -39,13 +39,16 @@ class ProxyVisitor {
                     if ('0' == b.status) {
                         console.log('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
                         self.request_try_limit_++;
-                        if( self.request_try_limit_ > 5000 ){
+                        if (self.request_try_limit_ > 5000) {
                             log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignore.');
-                            if( callback )
-                                callback({limit:true});
+                            if (callback)
+                                callback({ limit: true });
                             return;
                         }
-                        self.initVisitor(callback);
+                        self.initVisitor(function(){
+                            if( callback )
+                                callback();
+                        });
                         return;
                     }
                     var proxyip = b.data.proxyip;
@@ -63,6 +66,8 @@ class ProxyVisitor {
                     });
                     if (callback)
                         callback();
+                } else {
+                    console.log('Proxy', 'initVisitor Failed:', self);
                 }
             });
         }
@@ -85,27 +90,34 @@ class ProxyVisitor {
             return false;
         }
         ProxyVisitor.static_request_ = null;
-        self.body_ ? self.releaseVisitor(visitor) : log._logR('Proxy', 'no need to refresh...');
-        setTimeout(function() {
-            self.initVisitor(callback);
-        }, 10);
+        self.releaseVisitor(visitor, function () {
+            self.initVisitor(function(){
+                if( callback )
+                    callback();
+            });
+        });
         return true;
     }
-    releaseVisitor(visitor) {
+    releaseVisitor(visitor, callback) {
         var self = visitor ? visitor : this;
         if (!self.useproxy_ || !self.body_) {
             log._logR('Proxy', 'Proxy using denined,may released already.')
+            if (callback)
+                callback();
             return;
         }
-        ProxyVisitor.releaseProxy(self.body_);
-        self.body_ = null;
-        //delete proxy cache file
-        fs.unlink(printf('./datas/proxycache/%s.proxy', self.guid_), function (err) {
-            if (err)
-                console.log(err);
+        ProxyVisitor.releaseProxy(self.body_, function (b) {
+            self.body_ = null;
+            //delete proxy cache file
+            fs.unlink(printf('./datas/proxycache/%s.proxy', self.guid_), function (err) {
+                if (err)
+                    console.log(err);
+                if (callback)
+                    callback(b);
+            });
         });
     }
-    static releaseProxy(body) {
+    static releaseProxy(body, callback) {
         var options = {
             method: 'POST',
             uri: proxyReleaseUrl,
@@ -117,7 +129,10 @@ class ProxyVisitor {
                 log._logE('Proxy-Error', 'upload failed:', e);
                 return;
             }
-            log._logR('Proxy', 'proxy released...', b);
+            log._logR('Proxy', 'proxy released...', body);
+            if (callback) {
+                callback(b);
+            }
         })
     }
     static releaseAllProxies(callback) {
@@ -133,7 +148,6 @@ class ProxyVisitor {
             var count = files.length;
             files.forEach(function (filename) {
                 fs.readFile(proxy_cache_path + filename, 'utf8', function (err, body) {
-                    log._logR('Proxy', 'Released', body);
                     ProxyVisitor.releaseProxy(body);
                     fs.unlink(proxy_cache_path + filename, function (err) {
                         if (err)

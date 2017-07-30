@@ -8,8 +8,8 @@ const log = require('../libs/log');
 
 class DbOperatorTYC extends dbop {
     constructor() {
-        //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        super('localhost', 'root', 'admin111', 'tianyancha');
+        super('192.168.6.184', 'root', 'admin111', 'tianyancha');
+        //super('localhost', 'root', 'admin111', 'tianyancha');
         //super('localhost', 'root', 'mysql', 'tianyancha');
     }
     ensureDbExist(callback) {
@@ -216,6 +216,41 @@ class DbOperatorTYC extends dbop {
         });
     }
 
+    getCompanyMaxID(callback) {
+        if (!this.check()) {
+            callback(null);
+            return;
+        }
+        var q = printf("SELECT max(id) as id FROM enterprise_base;");
+        this.connection_.query(q, function (error, results, fields) {
+            if (!error) {
+                callback(results[0].id);
+            } else {
+                log._logE('Mysql::getCompanyMaxID', q, error.stack);
+                callback(null);
+            }
+        });
+    }
+
+    getNoDetailPageUrls(callback) {
+        if (!this.check()) {
+            callback(null);
+            return;
+        }
+        var limit = arguments[1] ? printf('limit %d;', arguments[1]) : '';
+        var condition = arguments[2] ? (arguments[2] + ' and') : '';
+        var q = printf("SELECT url,code FROM enterprise_base WHERE %s id NOT IN(SELECT fid FROM enterprise_detail) %s", condition,limit);
+        log._logR('Mysql::getNoDetailPageUrls',q);
+        this.connection_.query(q, function (error, results, fields) {
+            if (!error) {
+                callback(results);
+            } else {
+                log._logE('Mysql::getNoDetailPageUrls', q, error.stack);
+                callback(null);
+            }
+        });
+    }
+
     verifyCompanyExists(code, callback) {
         if (!this.check()) {
             callback(false);
@@ -264,7 +299,7 @@ class DbOperatorTYC extends dbop {
                 // select '%s','%s','%s','%s','%s',NOW() from DUAL where not exists \
                 // (select id from enterprise_base where code = '%s');",
                 var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) values('%s','%s','%s','%s','%s',NOW());",
-                desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc),desc.company_id);
+                    desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
                 self.connection_.query(q, function (error, results, fields) {
                     if (!error) {
                         callback(true);
