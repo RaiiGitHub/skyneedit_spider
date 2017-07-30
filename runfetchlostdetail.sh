@@ -6,7 +6,7 @@ PROCESSLIMIT=$1
 TYC=`ps -fe|grep main_tianyc_detail_only |grep -v grep|wc -l|awk '{print $1}'`
 ((TYC--))
 echo $TYC
-if (($TYC < $PROCESSLIMIT))
+if (($TYC < 2))
 then
     echo "clean processes....."
 	PROCESS=`ps -ef|grep main_tianyc_detail_only|grep -v grep|grep -v PPID|awk '{ print $2}'`
@@ -16,7 +16,7 @@ then
         kill -9 $i
     done
     echo "clean proxy....."
-    node main_releaseproxy.js
+    node main_releaseproxy.js proxycache_d
     node main_tianyc_detail_only.js $PROCESSLIMIT
 fi
 echo "start main_tianyc_detail_only.js in $PROCESSLIMIT proxies....."

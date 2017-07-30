@@ -1,8 +1,4 @@
-datas/logs/
-datas/pre/
-datas/proxycache/*.proxy
-datas/searchkey/
-datas/spidingdatas/
+datas/
 experiment/
 node_modules/
 offset.txt

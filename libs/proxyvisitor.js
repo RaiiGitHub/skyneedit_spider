@@ -12,7 +12,7 @@ const proxyReleaseUrl = proxyBaseUrl + '/ip/reDial/';
 
 class ProxyVisitor {
     //代理访问者
-    constructor() {
+    constructor(cache_name) {
         this.proxyip_ = null;
         this.port_ = null;
         this.serverip_ = null;
@@ -22,6 +22,9 @@ class ProxyVisitor {
         this.request_ = request;
         this.guid_ = guid.gen();
         this.request_try_limit_ = 0;
+        this.cache_name_ = cache_name;
+        if( cache_name )
+            fs.mkdir('./datas/'+cache_name,function(err){});
         ProxyVisitor.static_request_ = request;
     }
     initVisitor(callback) {
@@ -60,7 +63,8 @@ class ProxyVisitor {
                     self.request_try_limit_ = 0;//reset.
                     self.getProxyRequester();
                     //write it to cache file
-                    fs.writeFile(printf('./datas/proxycache/%s.proxy', self.guid_), body, function (err) {
+                    var cn = self.cache_name_?self.cache_name_:'proxycache';
+                    fs.writeFile(printf('./datas/%s/%s.proxy', cn,self.guid_), body, function (err) {
                         if (err)
                             console.log(err);
                     });
@@ -109,7 +113,8 @@ class ProxyVisitor {
         ProxyVisitor.releaseProxy(self.body_, function (b) {
             self.body_ = null;
             //delete proxy cache file
-            fs.unlink(printf('./datas/proxycache/%s.proxy', self.guid_), function (err) {
+            var cn = self.cache_name_?self.cache_name_:'proxycache';
+            fs.unlink(printf('./datas/%s/%s.proxy', cn,self.guid_), function (err) {
                 if (err)
                     console.log(err);
                 if (callback)
@@ -129,15 +134,16 @@ class ProxyVisitor {
                 log._logE('Proxy-Error', 'upload failed:', e);
                 return;
             }
-            log._logR('Proxy', 'proxy released...', body);
+            log._logR('Proxy', 'proxy released...', b,body);
             if (callback) {
                 callback(b);
             }
         })
     }
-    static releaseAllProxies(callback) {
+    static releaseAllProxies(callback,name) {
         //读取文件目录
-        var proxy_cache_path = './datas/proxycache/';
+        var cn = name?name:'proxycache';
+        var proxy_cache_path = './datas/'+cn+'/';
         fs.readdir(proxy_cache_path, function (err, files) {
             if (err) {
                 console.log(err);

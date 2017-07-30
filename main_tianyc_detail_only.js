@@ -13,7 +13,7 @@ function onexit() {
   pv.releaseAllProxies(function () {
     log._logR('Main::Exit', 'Bye.');
     process.exit(0);
-  });
+  },'proxycache_d');
 }
 
 log.init('./datas/logs/detail', 'NORMAL', 'Windows', 'TYCDetailFetcher');
@@ -50,7 +50,7 @@ if (cluster.isMaster) {
 
 } else {
   var db = new dbop;
-  var proxy = new pv;
+  var proxy = new pv('proxycache_d');
   var concurrency_num = 0;
   db.config();
   process.on('message', function (msg) {
@@ -69,9 +69,9 @@ if (cluster.isMaster) {
         } else {
           log._logR('Main::finished', process.pid,'rest is',concurrency_num);
         }
-        concurrency_num--;
-        if( concurrency_num <= 0 )
-          onexit();
+        // concurrency_num--;
+        // if( concurrency_num <= 0 )
+        //   onexit();
       });
     }
   });
