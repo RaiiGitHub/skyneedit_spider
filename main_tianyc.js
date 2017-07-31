@@ -33,7 +33,7 @@ if (cluster.isMaster) {
       var ip_limit = process_args[1];
       var sub_task_num = Math.max(ip_limit / process_num,1);
       search_key_index_offset = parseInt(buf, 10);
-      search_key_index_offset -= process_num;
+      search_key_index_offset -= ip_limit;
       search_key_index_offset = Math.max(0, search_key_index_offset);
       //var numCPUs = require('os').cpus().length;
       var worker_tasks = process_num;
