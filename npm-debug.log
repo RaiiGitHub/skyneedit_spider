@@ -1,0 +1,158 @@
+0 info it worked if it ends with ok
+1 verbose cli [ 'D:\\Program Files\\nodejs\\node.exe',
+1 verbose cli   'D:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js',
+1 verbose cli   'install',
+1 verbose cli   'libuv_ex' ]
+2 info using npm@3.10.10
+3 info using node@v6.11.0
+4 silly loadCurrentTree Starting
+5 silly install loadCurrentTree
+6 silly install readLocalPackageData
+7 silly fetchPackageMetaData libuv_ex
+8 silly fetchNamedPackageData libuv_ex
+9 silly mapToRegistry name libuv_ex
+10 silly mapToRegistry using default registry
+11 silly mapToRegistry registry https://registry.npmjs.org/
+12 silly mapToRegistry data Result {
+12 silly mapToRegistry   raw: 'libuv_ex',
+12 silly mapToRegistry   scope: null,
+12 silly mapToRegistry   escapedName: 'libuv_ex',
+12 silly mapToRegistry   name: 'libuv_ex',
+12 silly mapToRegistry   rawSpec: '',
+12 silly mapToRegistry   spec: 'latest',
+12 silly mapToRegistry   type: 'tag' }
+13 silly mapToRegistry uri https://registry.npmjs.org/libuv_ex
+14 verbose request uri https://registry.npmjs.org/libuv_ex
+15 verbose request no auth needed
+16 info attempt registry request try #1 at 16:50:56
+17 verbose request id 2842431fdfedfb07
+18 http request GET https://registry.npmjs.org/libuv_ex
+19 http 200 https://registry.npmjs.org/libuv_ex
+20 verbose headers { server: 'nginx/1.10.3',
+20 verbose headers   'content-type': 'application/json',
+20 verbose headers   'last-modified': 'Wed, 22 May 2013 15:20:48 GMT',
+20 verbose headers   etag: 'W/"519ce250-13e3"',
+20 verbose headers   'content-encoding': 'gzip',
+20 verbose headers   'cache-control': 'max-age=300',
+20 verbose headers   'content-length': '882',
+20 verbose headers   'accept-ranges': 'bytes',
+20 verbose headers   date: 'Mon, 31 Jul 2017 08:51:12 GMT',
+20 verbose headers   via: '1.1 varnish',
+20 verbose headers   age: '0',
+20 verbose headers   connection: 'keep-alive',
+20 verbose headers   'x-served-by': 'cache-nrt6132-NRT',
+20 verbose headers   'x-cache': 'MISS',
+20 verbose headers   'x-cache-hits': '0',
+20 verbose headers   'x-timer': 'S1501491072.493977,VS0,VE151',
+20 verbose headers   vary: 'Accept-Encoding, Accept' }
+21 silly get cb [ 200,
+21 silly get   { server: 'nginx/1.10.3',
+21 silly get     'content-type': 'application/json',
+21 silly get     'last-modified': 'Wed, 22 May 2013 15:20:48 GMT',
+21 silly get     etag: 'W/"519ce250-13e3"',
+21 silly get     'content-encoding': 'gzip',
+21 silly get     'cache-control': 'max-age=300',
+21 silly get     'content-length': '882',
+21 silly get     'accept-ranges': 'bytes',
+21 silly get     date: 'Mon, 31 Jul 2017 08:51:12 GMT',
+21 silly get     via: '1.1 varnish',
+21 silly get     age: '0',
+21 silly get     connection: 'keep-alive',
+21 silly get     'x-served-by': 'cache-nrt6132-NRT',
+21 silly get     'x-cache': 'MISS',
+21 silly get     'x-cache-hits': '0',
+21 silly get     'x-timer': 'S1501491072.493977,VS0,VE151',
+21 silly get     vary: 'Accept-Encoding, Accept' } ]
+22 verbose get saving libuv_ex to C:\Users\Think\AppData\Roaming\npm-cache\registry.npmjs.org\libuv_ex\.cache.json
+23 verbose correctMkdir C:\Users\Think\AppData\Roaming\npm-cache correctMkdir not in flight; initializing
+24 silly install normalizeTree
+25 silly loadCurrentTree Finishing
+26 silly loadIdealTree Starting
+27 silly install loadIdealTree
+28 silly cloneCurrentTree Starting
+29 silly install cloneCurrentTreeToIdealTree
+30 silly cloneCurrentTree Finishing
+31 silly loadShrinkwrap Starting
+32 silly install loadShrinkwrap
+33 silly loadShrinkwrap Finishing
+34 silly loadAllDepsIntoIdealTree Starting
+35 silly install loadAllDepsIntoIdealTree
+36 silly resolveWithNewModule libuv_ex@0.1.3 checking installable status
+37 silly cache add args [ 'libuv_ex', null ]
+38 verbose cache add spec libuv_ex
+39 silly cache add parsed spec Result {
+39 silly cache add   raw: 'libuv_ex',
+39 silly cache add   scope: null,
+39 silly cache add   escapedName: 'libuv_ex',
+39 silly cache add   name: 'libuv_ex',
+39 silly cache add   rawSpec: '',
+39 silly cache add   spec: 'latest',
+39 silly cache add   type: 'tag' }
+40 silly addNamed libuv_ex@latest
+41 verbose addNamed "latest" is being treated as a dist-tag for libuv_ex
+42 info addNameTag [ 'libuv_ex', 'latest' ]
+43 silly mapToRegistry name libuv_ex
+44 silly mapToRegistry using default registry
+45 silly mapToRegistry registry https://registry.npmjs.org/
+46 silly mapToRegistry data Result {
+46 silly mapToRegistry   raw: 'libuv_ex',
+46 silly mapToRegistry   scope: null,
+46 silly mapToRegistry   escapedName: 'libuv_ex',
+46 silly mapToRegistry   name: 'libuv_ex',
+46 silly mapToRegistry   rawSpec: '',
+46 silly mapToRegistry   spec: 'latest',
+46 silly mapToRegistry   type: 'tag' }
+47 silly mapToRegistry uri https://registry.npmjs.org/libuv_ex
+48 verbose addNameTag registry:https://registry.npmjs.org/libuv_ex not in flight; fetching
+49 verbose get https://registry.npmjs.org/libuv_ex not expired, no request
+50 silly addNameTag next cb for libuv_ex with tag latest
+51 silly addNamed libuv_ex@0.1.3
+52 verbose addNamed "0.1.3" is a plain semver version for libuv_ex
+53 silly mapToRegistry name libuv_ex
+54 silly mapToRegistry using default registry
+55 silly mapToRegistry registry https://registry.npmjs.org/
+56 silly mapToRegistry data Result {
+56 silly mapToRegistry   raw: 'libuv_ex',
+56 silly mapToRegistry   scope: null,
+56 silly mapToRegistry   escapedName: 'libuv_ex',
+56 silly mapToRegistry   name: 'libuv_ex',
+56 silly mapToRegistry   rawSpec: '',
+56 silly mapToRegistry   spec: 'latest',
+56 silly mapToRegistry   type: 'tag' }
+57 silly mapToRegistry uri https://registry.npmjs.org/libuv_ex
+58 verbose addRemoteTarball https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz not in flight; adding
+59 verbose addRemoteTarball [ 'https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz',
+59 verbose addRemoteTarball   '8d603c865ee6434eefb27b164b35253a77a020e2' ]
+60 info retry fetch attempt 1 at 16:51:01
+61 info attempt registry request try #1 at 16:51:01
+62 http fetch GET https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz
+63 http fetch 200 https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz
+64 info retry will retry, error on last attempt: Error: read ECONNRESET
+65 silly fetchAndShaCheck shasum 8d603c865ee6434eefb27b164b35253a77a020e2
+66 silly rollbackFailedOptional Starting
+67 silly rollbackFailedOptional Finishing
+68 silly runTopLevelLifecycles Finishing
+69 silly install printInstalled
+70 verbose stack Error: shasum check failed for C:\Users\Think\AppData\Local\Temp\npm-13380-461e174b\registry.npmjs.org\libuv_ex\-\libuv_ex-0.1.3.tgz
+70 verbose stack Expected: 8d603c865ee6434eefb27b164b35253a77a020e2
+70 verbose stack Actual:   d3a80933e16fa8afdf9e55908adeb6b70eadfec3
+70 verbose stack From:     https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz
+70 verbose stack     at D:\Program Files\nodejs\node_modules\npm\node_modules\sha\index.js:25:8
+70 verbose stack     at ReadStream.<anonymous> (D:\Program Files\nodejs\node_modules\npm\node_modules\sha\index.js:72:7)
+70 verbose stack     at emitNone (events.js:91:20)
+70 verbose stack     at ReadStream.emit (events.js:185:7)
+70 verbose stack     at endReadableNT (_stream_readable.js:974:12)
+70 verbose stack     at _combinedTickCallback (internal/process/next_tick.js:80:11)
+70 verbose stack     at process._tickCallback (internal/process/next_tick.js:104:9)
+71 verbose cwd D:\workspace\node_js_project
+72 error Windows_NT 10.0.15063
+73 error argv "D:\\Program Files\\nodejs\\node.exe" "D:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "install" "libuv_ex"
+74 error node v6.11.0
+75 error npm  v3.10.10
+76 error shasum check failed for C:\Users\Think\AppData\Local\Temp\npm-13380-461e174b\registry.npmjs.org\libuv_ex\-\libuv_ex-0.1.3.tgz
+76 error Expected: 8d603c865ee6434eefb27b164b35253a77a020e2
+76 error Actual:   d3a80933e16fa8afdf9e55908adeb6b70eadfec3
+76 error From:     https://registry.npmjs.org/libuv_ex/-/libuv_ex-0.1.3.tgz
+77 error If you need help, you may report this error at:
+77 error     <https://github.com/npm/npm/issues>
+78 verbose exit [ 1, true ]

@@ -68,6 +68,7 @@ class ProxyVisitor {
                         if (err)
                             console.log(err);
                     });
+                    log._logR('Proxy', 'proxy request succeed...',body);
                     if (callback)
                         callback();
                 } else {

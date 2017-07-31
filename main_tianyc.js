@@ -54,7 +54,6 @@ if (cluster.isMaster) {
             });
           }
         });
-        console.log(3333333333333);
         for( var sub_index = 0; sub_index < sub_task_num; sub_index++)
           console.log(sub_index);
           wp.send({ begin: true,subtasks:sub_task_num });
@@ -89,8 +88,10 @@ if (cluster.isMaster) {
             if (failed) {
               //failed...
               log._logR('Main::Failed', process.pid, 'subtask index:', subtasks--, 'Bye.');
-              if (subtasks <= 0)
+              if (subtasks <= 0){
+                e.ensureReleaseProxy();
                 process.send({ nomoredata: true });
+              }
             } else {
               log._logR('Main::finished', process.pid, 'Toggle to next.next will be',msg.offset);
               process.send({ next: true });
@@ -98,8 +99,10 @@ if (cluster.isMaster) {
           });
         } else {
           log._logR('Main::NomoreData', process.pid, 'subtask index:', subtasks--);
-          if( subtasks <= 0 )
+          if( subtasks <= 0 ){
+            e.ensureReleaseProxy();
             process.send({ nomoredata: true });//no more datas.
+          }
         }
       });
     }
