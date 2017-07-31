@@ -150,13 +150,13 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
         container.explainer_.emitter_.dboperator_.insertCompany(data_result, function (insert_ok) {
         });
         container.explainer_.emitter_.dboperator_.verifyCompanyPageExists(data_result.company_id, function (detail_exist) {
+            insertCount++;
             if (!detail_exist) {
                 container.user_data_.add(new urlentity(
                     data_result['company_detail_url'],
-                    container.user_data_.container_.length + 1,
+                    insertCount,//container.user_data_.container_.length + 1,
                     printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])));
             }
-            insertCount++;
             if (insertCount == contents.length) {
                 console.log('fetchBrief::container data-len:',
                     container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
