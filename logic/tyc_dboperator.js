@@ -49,6 +49,7 @@ class DbOperatorTYC extends dbop {
                         `keyName` VARCHAR(255) NULL COMMENT '源于搜索关键字', \
                         `fullName` VARCHAR(255) NULL COMMENT '全称', \
                         `url` VARCHAR(255) NULL COMMENT '详情页面url',\
+                        `urlValid` VARCHAR(1) NULL COMMENT '验证页面url是否有效',\
                         `briefDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间'); ";
 
@@ -233,7 +234,7 @@ class DbOperatorTYC extends dbop {
         }
         var limit = arguments[1] ? printf('limit %d;', arguments[1]) : '';
         var condition = arguments[2] ? (arguments[2] + ' and') : '';
-        var q = printf("SELECT url,code FROM enterprise_base WHERE %s id NOT IN(SELECT fid FROM enterprise_detail) %s", condition, limit);
+        var q = printf("SELECT url,code FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT fid FROM enterprise_detail) %s", condition, limit);
         log._logR('Mysql::getNoDetailPageUrls', q);
         this.connection_.query(q, function (error, results, fields) {
             if (!error) {
@@ -273,6 +274,25 @@ class DbOperatorTYC extends dbop {
             } else {
                 log._logE('Mysql::verifyCompanyPageExists', q, error.stack);
                 callback(false);
+            }
+        });
+    }
+
+    updateCompanyUrlVerified(code,valid,callback){
+        if (!this.check()) {
+            callback(false);
+            return;
+        }
+        //valid can be null.
+        var q = printf("UPDATE enterprise_base SET urlValid = %s WHERE code = '%s';", !!valid?'NULL':valid,code);
+        this.connection_.query(q, function (error, results, fields) {
+            if (!error) {
+                if( callback )
+                    callback(true);
+            } else {
+                log._logE('Mysql::updateCompanyUrlVerified', q, error.stack);
+                if( callback )
+                    callback(false);
             }
         });
     }

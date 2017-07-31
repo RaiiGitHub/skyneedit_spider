@@ -193,6 +193,8 @@ function fetchDetail(container, export_datas, html, url_entity, callback) {
     var $ = cheerio.load(html);
     var detail_node_exist = $('.companyTitleBox55.pt20.pl30.pr30');
     var detail_node_notfound = $('.input-group.inputV2');
+    var desc = {};
+    desc.company_id = url_entity.key_.match(/(\S*)\.detail\.(\d+)\.(\S*)/)[2];
     if (detail_node_exist.is('div')) {
 
         //not write...
@@ -205,17 +207,16 @@ function fetchDetail(container, export_datas, html, url_entity, callback) {
 
         //富士康科技集团.detail.3071126383.广西富梦创新科技有限责任公司
         //save to db
-        var desc = {};
-        desc.company_id = url_entity.key_.match(/(\S*)\.detail\.(\d+)\.(\S*)/)[2];
         //others to be explain.
         container.explainer_.emitter_.dboperator_.insertCompanyPage(desc, html, function (insert_ok) {
-            log._logR('fetching detail', insert_ok,'finished', url_entity.key_);
+            log._logR('fetching detail', insert_ok, 'finished', url_entity.key_);
             if (callback) {
                 callback(true);
             }
         });
     } else if (detail_node_notfound.is('div')) {
         //this page is nolonger exit.
+        container.explainer_.emitter_.dboperator_.updateCompanyUrlVerified(desc.company_id,0);
         log._logR('fetching detail', 'page not exist', url_entity.key_);
         callback(true);//toggle to next.
     } else {

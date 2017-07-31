@@ -27,6 +27,7 @@ if (cluster.isMaster) {
     return;
   }
   var ws = parseInt(process_args[0]);
+  var limit = 2 <= process_args.length?parseInt(process_args[1]):null;
   var db = new dbop();
   db.config();
   db.getCompanyMaxID(function (id) {
@@ -39,7 +40,7 @@ if (cluster.isMaster) {
         var condition = printf('id >= %s and id <= %s', i, upb);
         log._logR('Main::Assign', 'From', i, 'To', upb);
         var wp = cluster.fork();//work process.
-        wp.send({ condition: condition });
+        wp.send({ condition: condition,limit:limit });
         i = upb + 1;
         if (upb == id) {
           break;
@@ -59,7 +60,7 @@ if (cluster.isMaster) {
       var e = new emitter(
         db,
         proxy,
-        new explainer(msg.condition,null),
+        new explainer(msg.condition,msg.limit),
         new urlentity('', 1, '')//get fetching urls from db.
       );
       e.emit(true, function (failed) {
@@ -69,9 +70,9 @@ if (cluster.isMaster) {
         } else {
           log._logR('Main::finished', process.pid,'rest is',concurrency_num);
         }
-        // concurrency_num--;
-        // if( concurrency_num <= 0 )
-        //   onexit();
+        concurrency_num--;
+        if( concurrency_num <= 0 )
+          e.ensureReleaseProxy();
       });
     }
   });
