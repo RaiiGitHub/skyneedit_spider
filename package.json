@@ -14,6 +14,7 @@
     "ip": "^1.1.5",
     "line-reader": "^0.4.0",
     "mysql": "^2.14.0",
+    "mysql-queries": "^0.2.0",
     "printf": "^0.2.5",
     "request": "^2.81.0",
     "underscore": "^1.8.3",

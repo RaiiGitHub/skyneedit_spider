@@ -40,7 +40,7 @@ class MethodStep1 extends explainer.MethodBase {
                 log._logR('Method::Step1', 'server err.Query denied in this proxy.');
                 refreshproxy();
             }
-            else{
+            else {
                 if (proxy.body_)
                     log._logR('Method::Step1', proxy.body_);
                 fetcher.fetchPage(self, body, ue.key_, function (count) {
@@ -136,7 +136,7 @@ class MethodStep2 extends explainer.MethodBase {
                 //time out...
                 log._logR('Method::Step2', 'sever err.Query denied in this proxy.');
                 refreshproxy();
-            } else{
+            } else {
                 if (proxy.body_)
                     log._logR('Method::Step2', proxy.body_);
                 var export_datas = null;
@@ -153,6 +153,7 @@ class MethodStep2 extends explainer.MethodBase {
     }
     execute(callback) {
         //build task async
+        log._logR('Method::Step2', 'begin...');
         log._logR('Method::Step2', 'Cur Detail urls Changed:',
             this.user_data_ ? this.user_data_.size() : 0);
         if (null == this.pre_) {
@@ -203,6 +204,8 @@ class MethodStep3 extends explainer.MethodBase {
             up.stamp();
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
+                //forcely run batch of inserting company-details.
+                self.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
@@ -222,7 +225,7 @@ class MethodStep3 extends explainer.MethodBase {
             if (err) {
                 log._logR('Method::Step3', 'server err.Query denied in this proxy.');
                 refreshproxy();
-            } else{
+            } else {
                 if (proxy.body_)
                     log._logR('Method::Step3', proxy.body_);
                 log._logR('Method::Step3', 'Fetching detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
@@ -263,6 +266,8 @@ class MethodStep3 extends explainer.MethodBase {
                     self.sub(cb_sub, callback);
                 });
             }
+            //forcely run batch of inserting company.
+            self.explainer_.emitter_.dboperator_.insertCompanyBatch(true);
             async.waterfall(tasks, function (err, result) {
                 //need to be done in the callback funcions.
             });

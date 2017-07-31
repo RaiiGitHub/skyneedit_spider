@@ -54,7 +54,9 @@ if (cluster.isMaster) {
             });
           }
         });
+        console.log(3333333333333);
         for( var sub_index = 0; sub_index < sub_task_num; sub_index++)
+          console.log(sub_index);
           wp.send({ begin: true,subtasks:sub_task_num });
       }
     }
