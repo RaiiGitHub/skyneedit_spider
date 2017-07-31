@@ -9,7 +9,8 @@ const log = require('../libs/log');
 class DbOperatorTYC extends dbop {
     constructor() {
         //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        super('localhost', 'root', 'mysql', 'tianyancha');
+        super('localhost', 'root', 'admin111', 'tianyancha');
+        //super('localhost', 'root', 'mysql', 'tianyancha');
     }
     ensureDbExist(callback) {
         //warning! if call this, it should be called before connecting.
@@ -50,7 +51,7 @@ class DbOperatorTYC extends dbop {
                         `id` int auto_increment primary key COMMENT '自增长的键值',\
                         `fid` int NOT NULL COMMENT '外键（表enterprise_base）',\
                         `detailDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
-                        `html` LONGTEXT NULL COMMENT '详情页面内容', \
+                        `html` MEDIUMTEXT NULL COMMENT '详情页面内容', \
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间',\
                         foreign key(fid) references enterprise_base(id) ON DELETE CASCADE ON UPDATE RESTRICT);";
 
@@ -215,6 +216,41 @@ class DbOperatorTYC extends dbop {
         });
     }
 
+    getCompanyMaxID(callback) {
+        if (!this.check()) {
+            callback(null);
+            return;
+        }
+        var q = printf("SELECT max(id) as id FROM enterprise_base;");
+        this.connection_.query(q, function (error, results, fields) {
+            if (!error) {
+                callback(results[0].id);
+            } else {
+                log._logE('Mysql::getCompanyMaxID', q, error.stack);
+                callback(null);
+            }
+        });
+    }
+
+    getNoDetailPageUrls(callback) {
+        if (!this.check()) {
+            callback(null);
+            return;
+        }
+        var limit = arguments[1] ? printf('limit %d;', arguments[1]) : '';
+        var condition = arguments[2] ? (arguments[2] + ' and') : '';
+        var q = printf("SELECT url,code FROM enterprise_base WHERE %s id NOT IN(SELECT fid FROM enterprise_detail) %s", condition,limit);
+        log._logR('Mysql::getNoDetailPageUrls',q);
+        this.connection_.query(q, function (error, results, fields) {
+            if (!error) {
+                callback(results);
+            } else {
+                log._logE('Mysql::getNoDetailPageUrls', q, error.stack);
+                callback(null);
+            }
+        });
+    }
+
     verifyCompanyExists(code, callback) {
         if (!this.check()) {
             callback(false);
@@ -259,10 +295,11 @@ class DbOperatorTYC extends dbop {
                 console.log('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
                 callback(false);
             } else {
-                var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) \
-                select '%s','%s','%s','%s','%s',NOW() from DUAL where not exists \
-                (select id from enterprise_base where code = '%s');",
-                desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc),desc.company_id);
+                // var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) \
+                // select '%s','%s','%s','%s','%s',NOW() from DUAL where not exists \
+                // (select id from enterprise_base where code = '%s');",
+                var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) values('%s','%s','%s','%s','%s',NOW());",
+                    desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
                 self.connection_.query(q, function (error, results, fields) {
                     if (!error) {
                         callback(true);
@@ -282,10 +319,10 @@ class DbOperatorTYC extends dbop {
         var self = this;
         self.verifyCompanyPageExists(desc.company_id, function (exists) {
             if (exists) {
-                log._logE('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
+                log._logE('Mysql::insertCompanyPage', 'company code with', desc.company_id, 'already exists.');
                 callback(false);
             } else {
-                var fid = printf("(select id from enterprise_base where code='%s')", desc.company_id);
+                var fid = printf("(select id from enterprise_base where code='%s' limit 1)", desc.company_id);
                 var insert_params = [html];
                 var q = printf("insert into enterprise_detail(fid,detailDesc,html,recordTime) values(%s,'%s',?,NOW());",
                     fid, JSON.stringify(desc));
@@ -293,7 +330,7 @@ class DbOperatorTYC extends dbop {
                     if (!error) {
                         callback(true);
                     } else {
-                        log._logE('Mysql::insertCompany', q, error.stack);
+                        log._logE('Mysql::insertCompanyPage', q, error.stack);
                         callback(false);
                     }
                 });

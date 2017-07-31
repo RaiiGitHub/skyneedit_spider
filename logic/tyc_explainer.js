@@ -37,11 +37,10 @@ class MethodStep1 extends explainer.MethodBase {
         request(options, function (err, res, body) {
             if (err) {
                 //time out...
-                log._logE('Method::Step1', 'server err.Query denied in this proxy.');
                 log._logR('Method::Step1', 'server err.Query denied in this proxy.');
                 refreshproxy();
             }
-            else if (res.statusCode == 200) {
+            else{
                 if (proxy.body_)
                     log._logR('Method::Step1', proxy.body_);
                 fetcher.fetchPage(self, body, ue.key_, function (count) {
@@ -63,7 +62,12 @@ class MethodStep1 extends explainer.MethodBase {
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
                                     self.next_.user_data_ ? self.next_.user_data_.size() : 0);
-                                self.finish(callback);
+                                if (ok)
+                                    self.finish(callback);
+                                else {
+                                    log._logR('Method::Step1', 'Fetching Failed.', 'May be rejected by the server,refreshing first...');
+                                    refreshproxy();
+                                }
                             });
                             break;
                         }
@@ -74,20 +78,21 @@ class MethodStep1 extends explainer.MethodBase {
                             fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
                                 log._logR('Method::Step1', 'Cur Detail urls Changed:',
                                     self.next_.user_data_ ? self.next_.user_data_.size() : 0);
-                                self.finish(callback);
+                                if (ok)
+                                    self.finish(callback);
+                                else {
+                                    log._logR('Method::Step1', 'Fetching Failed.', 'May be rejected by the server,refreshing first...');
+                                    refreshproxy();
+                                }
                             });
                             break;
                         }
                     }
                 });
-            }else{
-                //redo again.
-                log._logR('Method::Step1', 'Fetching Failed.','Redo again,refreshing first...');
-                refreshproxy();
             }
         });
     }
-}
+};
 
 //step2 is to fetch the rest pages in a sequence.
 class MethodStep2 extends explainer.MethodBase {
@@ -120,7 +125,7 @@ class MethodStep2 extends explainer.MethodBase {
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function (limit) {
                 up.insert(ue, 0);//reinput.
-                log._logE('Method::Step2', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
+                log._logR('Method::Step2', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
@@ -129,26 +134,20 @@ class MethodStep2 extends explainer.MethodBase {
         request(options, function (err, res, body) {
             if (err) {
                 //time out...
-                log._logE('Method::Step2', 'sever err.Query denied in this proxy.');
                 log._logR('Method::Step2', 'sever err.Query denied in this proxy.');
                 refreshproxy();
-            } else if (res.statusCode == 200) {
+            } else{
                 if (proxy.body_)
                     log._logR('Method::Step2', proxy.body_);
                 var export_datas = null;
                 fetcher.fetchBrief(self, export_datas, body, ue, function (ok) {
                     if (!ok) {
-                        log._logE('Method::Step2', 'proxy may be denined,refreshing...');
                         log._logR('Method::Step2', 'proxy may be denined,refreshing...');
                         refreshproxy();
                     } else {
                         handlefunc();
                     }
                 }, up.statistics());
-            } else {
-                //need to redo again...
-                log._logE('Method::Step2', 'Fetching Error...', 'Redo again,refreshing first...');
-                refreshproxy();
             }
         });
     }
@@ -157,15 +156,12 @@ class MethodStep2 extends explainer.MethodBase {
         log._logR('Method::Step2', 'Cur Detail urls Changed:',
             this.user_data_ ? this.user_data_.size() : 0);
         if (null == this.pre_) {
-            log._logE('Method::Step2', 'No previous method.');
             log._logR('Method::Step2', 'No previous method.');
             callback(null);
             return;
         }
         var up = this.pre_.user_data_;
-        var up = this.pre_.user_data_;
         if (null == up) {
-            log._logE('Method::Step2', 'visit denined.');
             log._logR('Method::Step2', 'visit denined.');
             callback(null);
             return;
@@ -184,7 +180,7 @@ class MethodStep2 extends explainer.MethodBase {
             callback(null);
         }
     }
-}
+};
 
 //step3 is to fetch the detail pages in a sequence.
 class MethodStep3 extends explainer.MethodBase {
@@ -207,18 +203,16 @@ class MethodStep3 extends explainer.MethodBase {
             up.stamp();
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
-                self.finish(callback);//notify parent.
+                self.finish(cb_parent);//notify parent.
+                callback(null);
             } else {
-                log._logR('Method::Step3', 'Fetching next detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
-                if (ue.index_ == self.detail_url_num_)
-                    self.finish(cb_parent);
                 callback(null);
             }
         };
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function (limit) {
                 up.insert(ue, 0);
-                log._logE('Method::Step3', 'Proxy Need to be Refreshed.', !limit?'Succeeded.':'Failed.');
+                log._logR('Method::Step3', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
                 handlefunc();
@@ -226,25 +220,21 @@ class MethodStep3 extends explainer.MethodBase {
         }
         request(options, function (err, res, body) {
             if (err) {
-                log._logE('Method::Step3', 'server err.Query denied in this proxy.');
                 log._logR('Method::Step3', 'server err.Query denied in this proxy.');
                 refreshproxy();
-            } else if (res.statusCode == 200) {
+            } else{
                 if (proxy.body_)
                     log._logR('Method::Step3', proxy.body_);
+                log._logR('Method::Step3', 'Fetching detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
                 var export_datas = null;
-                fetcher.fetchDetail(self.pre_, export_datas, body, ue, function (ok) {
+                fetcher.fetchDetail(self, export_datas, body, ue, function (ok) {
                     if (!ok) {
-                        log._logE('Method::Step3', 'proxy may be denined,refreshing...');
                         log._logR('Method::Step3', 'proxy may be denined,refreshing...');
                         refreshproxy();
                     } else {
                         handlefunc();
                     }
                 }, up.statistics());
-            } else {
-                log._logE('Method::Step3', 'Fetching Error...', 'Redo again,refreshing first...');
-                refreshproxy();
             }
         });
     }
@@ -253,14 +243,12 @@ class MethodStep3 extends explainer.MethodBase {
         log._logR('Method::Step3', 'begin...');
         var self = this;
         if (null == self.pre_) {
-            log._logE('Method::Step3', 'No previous method.');
             log._logR('Method::Step3', 'No previous method.');
             self.finish(callback);
             return;
         }
         var up = self.pre_.user_data_;
         if (null == up) {
-            log._logE('Method::Step3', 'visit denined.');
             log._logR('Method::Step3', 'visit denined.');
             self.finish(callback);
             return;
@@ -283,11 +271,11 @@ class MethodStep3 extends explainer.MethodBase {
             self.finish(callback);
         }
     }
-}
+};
 
 class ExplainerTYC extends explainer.ExplainerBase {
-    setupMethod(request, emitter) {
-        super.setupMethod(request, emitter);
+    setupMethod(emitter) {
+        super.setupMethod(emitter);
         this.memo_ = 'explainer of tian yan cha.';
         this.methods_ = [
             new MethodStep1('step1', this),

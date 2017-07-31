@@ -17,7 +17,7 @@ then
         kill -9 $i
     done
     echo "clean proxy....."
-    node main_releaseproxy.js
+    node main_releaseproxy.js proxycache
     node main_tianyc.js $PROCESSLIMIT $IPLIMIT
 fi
 echo "start main_tianyc.js in $PROCESSLIMIT with $IPLIMIT proxies....."

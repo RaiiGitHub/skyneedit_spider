@@ -86,7 +86,7 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
             .children('a')
             .attr('href');
         var cdu = data_result['company_detail_url'];
-        var detail_url = cdu?cdu.match(company_id_matcher):'';
+        var detail_url = cdu ? cdu.match(company_id_matcher) : '';
         data_result['company_id'] = detail_url.length > 4 ? detail_url[4] : 'not found.';
 
         data_result['company_logo'] = $(this)
@@ -148,36 +148,36 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
         //save to db
         data_result.key = url_entity.key_;
         container.explainer_.emitter_.dboperator_.insertCompany(data_result, function (insert_ok) {
-            container.explainer_.emitter_.dboperator_.verifyCompanyPageExists(data_result.company_id, function (detail_exist) {
-                if (!detail_exist) {
-                    container.user_data_.add(new urlentity(
-                        data_result['company_detail_url'],
-                        container.user_data_.container_.length + 1,
-                        printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])));
+        });
+        container.explainer_.emitter_.dboperator_.verifyCompanyPageExists(data_result.company_id, function (detail_exist) {
+            if (!detail_exist) {
+                container.user_data_.add(new urlentity(
+                    data_result['company_detail_url'],
+                    container.user_data_.container_.length + 1,
+                    printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])));
+            }
+            insertCount++;
+            if (insertCount == contents.length) {
+                console.log('fetchBrief::container data-len:',
+                    container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
+                    page_data.datas.length);
+                export_datas = page_data;
+                //no write.
+                //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
+                //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
+                // fs.writeFile(url_file_name, html, function (err) {
+                //     if (err) throw err;
+                //     log._logR('fetching brief', 'saving to', url_file_name);
+                // });
+                // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
+                //     if (err) throw err;
+                //     log._logR('fetching brief', 'saving to', result_file_name);
+                // });
+                log._logR('fetching brief', 'finished...');
+                if (callback) {
+                    callback(true);
                 }
-                insertCount++;
-                if (insertCount == contents.length) {
-                    console.log('fetchBrief::container data-len:',
-                        container.user_data_ ? container.user_data_.size() : 'No yet.', 'page_data.datas:',
-                        page_data.datas.length);
-                    export_datas = page_data;
-                    //no write.
-                    //var url_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.html';
-                    //var result_file_name = './datas/' + url_entity.key_ + '.page.' + url_entity.index_ + '.json';
-                    // fs.writeFile(url_file_name, html, function (err) {
-                    //     if (err) throw err;
-                    //     log._logR('fetching brief', 'saving to', url_file_name);
-                    // });
-                    // fs.writeFile(result_file_name, JSON.stringify(page_data), function (err) {
-                    //     if (err) throw err;
-                    //     log._logR('fetching brief', 'saving to', result_file_name);
-                    // });
-                    log._logR('fetching brief', 'finished...');
-                    if (callback) {
-                        callback(true);
-                    }
-                }
-            });
+            }
         });
     });
     if (!ok) {
@@ -192,7 +192,7 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
 function fetchDetail(container, export_datas, html, url_entity, callback) {
     var $ = cheerio.load(html);
     var detail_node_exist = $('.companyTitleBox55.pt20.pl30.pr30');
-    var ok = false;
+    var detail_node_notfound = $('.input-group.inputV2');
     if (detail_node_exist.is('div')) {
 
         //not write...
@@ -208,13 +208,20 @@ function fetchDetail(container, export_datas, html, url_entity, callback) {
         var desc = {};
         desc.company_id = url_entity.key_.match(/(\S*)\.detail\.(\d+)\.(\S*)/)[2];
         //others to be explain.
-        container.explainer_.emitter_.dboperator_.insertCompanyPage(desc, html, function () { });
-        log._logR('fetching detail', 'finished', url_entity.key_);
-        ok = true;
-    }
-
-    if (callback) {
-        callback(ok);
+        container.explainer_.emitter_.dboperator_.insertCompanyPage(desc, html, function (insert_ok) {
+            log._logR('fetching detail', insert_ok,'finished', url_entity.key_);
+            if (callback) {
+                callback(true);
+            }
+        });
+    } else if (detail_node_notfound.is('div')) {
+        //this page is nolonger exit.
+        log._logR('fetching detail', 'page not exist', url_entity.key_);
+        callback(true);//toggle to next.
+    } else {
+        if (callback) {
+            callback(false);
+        }
     }
 }
 

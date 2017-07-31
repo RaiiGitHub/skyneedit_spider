@@ -1,8 +1,4 @@
-sko.txt
-datas/logs
-datas/pre
-datas/proxycache/*.proxy
-datas/searchkey
-datas/spidingdatas
-experiment
-node_modules
+datas/
+experiment/
+node_modules/
+offset.txt
