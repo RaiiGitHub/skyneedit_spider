@@ -17,7 +17,7 @@ then
     done
     echo "clean proxy....."
     node main_releaseproxy.js proxycache_d
-    node main_tianyc_detail_only.js $PROCESSLIMIT
+    node main_tianyc_detail_only.js $PROCESSLIMIT $2
 fi
 echo "start main_tianyc_detail_only.js in $PROCESSLIMIT proxies....."
 #####
