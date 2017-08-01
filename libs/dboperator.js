@@ -20,7 +20,7 @@ class DbOperator {
         }
         for (var i = 0; i < connect_size; i++) {
             var cur_con_len_ = DbOperator.static_connections_.length;
-            if (cur_con_len_ < 8) {
+            if (cur_con_len_ < DbOperator.static_max_con_) {
                 DbOperator.static_connections_.push(mysql.createConnection({
                     host: this.host_,
                     user: this.user_,
