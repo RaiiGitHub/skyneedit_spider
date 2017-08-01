@@ -15,11 +15,17 @@ class ContainerBase{
         return this.container_.length;
     }
     add(ele){
-        if( (arguments[1] ? arguments[1] : true) 
-            && this.check(ele) )
+        var c = (null != arguments[1]) ? arguments[1] : true;
+        if( c && this.check(ele) )
             return false;
         this.container_.push(ele);
         return true;
+    }
+    remove(index){
+        if( 0 < this.container_.length ){
+            return this.container_.splice(index, 1)[0];
+        }
+        return null;
     }
     insert(ele,index){
         if( (arguments[2] ? arguments[2] : true) 

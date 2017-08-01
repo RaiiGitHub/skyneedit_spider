@@ -9,7 +9,6 @@ const proxyBaseUrl = 'http://192.168.6.110';
 const proxyUrl = proxyBaseUrl + '/ip/getInfo/';
 //const proxyUrl = proxyBaseUrl + '/ip/getInfo?type=' + urlentity.encodeUrl('衢州市');
 const proxyReleaseUrl = proxyBaseUrl + '/ip/reDial/';
-
 class ProxyVisitor {
     //代理访问者
     constructor(cache_name) {
@@ -22,21 +21,35 @@ class ProxyVisitor {
         this.request_ = request;
         this.guid_ = guid.gen();
         this.request_try_limit_ = 0;
+        this.requesting_ = false;
+        this.refreshing_ = false;
         this.cache_name_ = cache_name;
-        if( cache_name )
-            fs.mkdir('./datas/'+cache_name,function(err){});
-        ProxyVisitor.static_request_ = request;
+        if (cache_name)
+            fs.mkdir('./datas/' + cache_name, function (err) { });
     }
     initVisitor(callback) {
         var self = this;
         if (self.useproxy_) {
-            if (ProxyVisitor.static_request_) {//using last request.
-                this.request_ = ProxyVisitor.static_request_;
+            var waiting = false;
+            while (self.requesting_) {
+                //just wait...
+                waiting = true;
+                console.log('initVisitor waiting...');
+            }
+            if (waiting) {
                 if (callback)
                     callback();
                 return;
             }
+            if (ProxyVisitor.static_request_) {//using last request.
+                self.request_ = ProxyVisitor.static_request_;
+                if (callback)
+                    callback();
+                return;
+            }
+            self.requesting_ = true;
             request(proxyUrl, function (error, response, body) {
+                self.requesting_ = false;
                 if (!error && 200 == response.statusCode) {
                     var b = JSON.parse(body);
                     if ('0' == b.status) {
@@ -48,8 +61,8 @@ class ProxyVisitor {
                                 callback({ limit: true });
                             return;
                         }
-                        self.initVisitor(function(){
-                            if( callback )
+                        self.initVisitor(function () {
+                            if (callback)
                                 callback();
                         });
                         return;
@@ -63,12 +76,12 @@ class ProxyVisitor {
                     self.request_try_limit_ = 0;//reset.
                     self.getProxyRequester();
                     //write it to cache file
-                    var cn = self.cache_name_?self.cache_name_:'proxycache';
-                    fs.writeFile(printf('./datas/%s/%s.proxy', cn,self.guid_), body, function (err) {
+                    var cn = self.cache_name_ ? self.cache_name_ : 'proxycache';
+                    fs.writeFile(printf('./datas/%s/%s.proxy', cn, self.guid_), body, function (err) {
                         if (err)
                             console.log(err);
                     });
-                    log._logR('Proxy', 'proxy request succeed...',body);
+                    log._logR('Proxy', 'proxy request succeed...', body);
                     if (callback)
                         callback();
                 } else {
@@ -96,8 +109,8 @@ class ProxyVisitor {
         }
         ProxyVisitor.static_request_ = null;
         self.releaseVisitor(visitor, function () {
-            self.initVisitor(function(){
-                if( callback )
+            self.initVisitor(function () {
+                if (callback)
                     callback();
             });
         });
@@ -105,17 +118,36 @@ class ProxyVisitor {
     }
     releaseVisitor(visitor, callback) {
         var self = visitor ? visitor : this;
-        if (!self.useproxy_ || !self.body_) {
-            log._logR('Proxy', 'Proxy using denined,may released already.')
+        if (!self.useproxy_) {
+            log._logR('Proxy', 'Proxy using denined.')
             if (callback)
                 callback();
             return;
         }
+        var waiting = false;
+        while (self.refreshing_) {
+            //just wait...
+            waiting = true;
+            console.log('releaseVisitor waiting...');
+        }
+        if (waiting) {
+            if (callback)
+                callback();
+            return;
+        }
+        if (!self.body_) {
+            log._logR('Proxy', 'Proxy released already.')
+            if (callback)
+                callback();
+            return;
+        }
+        self.refreshing_ = true;
         ProxyVisitor.releaseProxy(self.body_, function (b) {
             self.body_ = null;
+            self.refreshing_ = false;
             //delete proxy cache file
-            var cn = self.cache_name_?self.cache_name_:'proxycache';
-            fs.unlink(printf('./datas/%s/%s.proxy', cn,self.guid_), function (err) {
+            var cn = self.cache_name_ ? self.cache_name_ : 'proxycache';
+            fs.unlink(printf('./datas/%s/%s.proxy', cn, self.guid_), function (err) {
                 if (err)
                     console.log(err);
                 if (callback)
@@ -135,16 +167,16 @@ class ProxyVisitor {
                 log._logE('Proxy-Error', 'upload failed:', e);
                 return;
             }
-            log._logR('Proxy', 'proxy released...', b,body);
+            log._logR('Proxy', 'proxy released...', b, body);
             if (callback) {
                 callback(b);
             }
         })
     }
-    static releaseAllProxies(callback,name) {
+    static releaseAllProxies(callback, name) {
         //读取文件目录
-        var cn = name?name:'proxycache';
-        var proxy_cache_path = './datas/'+cn+'/';
+        var cn = name ? name : 'proxycache';
+        var proxy_cache_path = './datas/' + cn + '/';
         fs.readdir(proxy_cache_path, function (err, files) {
             if (err) {
                 console.log(err);
@@ -172,5 +204,4 @@ class ProxyVisitor {
     }
 
 }
-
 module.exports = ProxyVisitor;

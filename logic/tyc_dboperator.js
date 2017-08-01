@@ -12,10 +12,9 @@ class DbOperatorTYC extends dbop {
         //super('localhost', 'root', 'admin111', 'tianyancha');
         //super('localhost', 'root', 'mysql', 'tianyancha');
         //insert-cache-ops
-        this.insert_com_brief_queue_ = [];
-        this.insert_com_page_queue_ = [];
-        DbOperatorTYC.cache_size_ = 10;
-        DbOperatorTYC.cache_time_out_ = 10;
+        this.queues_ = { insert_com_breif: [], insert_com_page: [], update_search: [] };
+        DbOperatorTYC.cache_size_ = { brief: 30, page: 10, update: 40 };
+        DbOperatorTYC.cache_time_out_ = 120;
     }
     ensureDbExist(callback) {
         //warning! if call this, it should be called before connecting.
@@ -44,8 +43,7 @@ class DbOperatorTYC extends dbop {
             return;
         }
         var enterprise_base = "CREATE TABLE IF NOT EXISTS `enterprise_base`(\
-                        `id` int auto_increment primary key COMMENT '自增长的键值',\
-                        `code` VARCHAR(100) NOT NULL COMMENT '公司（企业）代码',\
+                        `id` int primary key COMMENT '公司（企业）代码，作为主键',\
                         `keyName` VARCHAR(255) NULL COMMENT '源于搜索关键字', \
                         `fullName` VARCHAR(255) NULL COMMENT '全称', \
                         `url` VARCHAR(255) NULL COMMENT '详情页面url',\
@@ -54,12 +52,11 @@ class DbOperatorTYC extends dbop {
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间'); ";
 
         var enterprise_detail = "CREATE TABLE IF NOT EXISTS `enterprise_detail`(\
-                        `id` int auto_increment primary key COMMENT '自增长的键值',\
-                        `fid` int NOT NULL COMMENT '外键（表enterprise_base）',\
+                        `id` int primary key COMMENT '公司（企业）代码，作为主键',\
                         `detailDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
                         `html` MEDIUMTEXT NULL COMMENT '详情页面内容', \
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间',\
-                        foreign key(fid) references enterprise_base(id) ON DELETE CASCADE ON UPDATE RESTRICT);";
+                        foreign key(id) references enterprise_base(id) ON DELETE CASCADE ON UPDATE RESTRICT);";
 
         var search_keys = "CREATE TABLE IF NOT EXISTS `search_keys`(\
                         `id` int auto_increment primary key COMMENT '自增长的键值',\
@@ -68,7 +65,7 @@ class DbOperatorTYC extends dbop {
                         `status` VARCHAR(45) NULL COMMENT '运行状态-running,not start,finished,terminal',\
                         `pageCount` int NULL COMMENT '页面数',\
                         `searchStartTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索开始时间',\
-                        `searchEndtTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索结束时间');";
+                        `searchEndTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索结束时间');";
 
         var mq = require('mysql-queries');
         mq.init({
@@ -159,23 +156,65 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    updateSearchKeyStatus(key, status, callback) {
+    updateSearchKeyStatus(keyid, status, callback) {
         var self = this;
         if (!self.check()) {
-            callback(false);
+            if (callback)
+                callback(false);
             return;
         }
+        //error,finish,running
         var st = status == 'running' ? ',searchStartTime=NOW()' : '';
-        var se = status == 'finished' ? ',searchEndTime=NOW()' : '';
-        var q = printf("update search_keys set status = '%s'%s%s where searchKey='%s'", key, st, se);
-        self.connection_.query(q, function (error, results, fields) {
-            if (!error) {
-                log._logE('Mysql::updateSearchKeyStatus', q, error.stack);
-                callback(false);
-            } else {
-                callback(true);
+        var se = status != 'running' ? ',searchEndTime=NOW()' : '';
+        var q = printf("update search_keys set status = '%s'%s%s where id=%d;", status, st, se, keyid);
+        console.log(q);
+        self.queues_.update_search.push(q);
+        self.updateSearchKeyStatusBatch();
+        if (callback)
+            callback(true);
+    }
+
+    updateSearchKeyStatusBatch(force) {
+        if (!this.check()) {
+            return;
+        }
+        var self = this;
+        var batch_func = function (limit) {
+            if (limit <= 0)
+                return;
+            var mq = require('mysql-queries');
+            mq.init({
+                host: self.host_,
+                port: 3306,
+                user: self.user_,
+                password: self.psw_,
+                database: self.dbname_
+            })
+            var sqls = [];
+            for (var i = 0; i < limit; i++) {
+                sqls.push(self.queues_.update_search.splice(0, 1)[0]);
             }
-        });
+            mq.queries(sqls, [], function (err, result) {
+                if (!!err) {
+                    console.log(err);
+                } else {
+                    log._logR('Mysql::updateSearchKeyStatusBatch', 'Completed with', limit, 'jobs...');
+                }
+            });
+        }
+        if (true == force) {
+            batch_func(self.queues_.update_search.length);//batch all.
+        }
+        else if (DbOperatorTYC.cache_size_.update <= self.queues_.update_search.length) {
+            batch_func(DbOperatorTYC.cache_size_.update);
+        } else {
+            //setup a timer
+            if (0 < self.queues_.update_search.length) {
+                setTimeout(function () {
+                    batch_func(self.queues_.update_search.length);
+                }, DbOperatorTYC.cache_time_out_ * 1000);
+            }
+        }
     }
 
     getSearchKeys(from, count, callback) {
@@ -184,7 +223,7 @@ class DbOperatorTYC extends dbop {
             return;
         }
         var limit = count ? ('limit ' + count) : '';
-        var q = printf("SELECT searchKey FROM search_keys where id >= %d %s;", from, limit);
+        var q = printf("SELECT id,searchKey FROM search_keys where id >= %d %s;", from, limit);
         this.connection_.query(q, function (error, results, fields) {
             if (!error && results.length > 0) {
                 callback(results);
@@ -234,7 +273,7 @@ class DbOperatorTYC extends dbop {
         }
         var limit = arguments[1] ? printf('limit %d;', arguments[1]) : '';
         var condition = arguments[2] ? (arguments[2] + ' and') : '';
-        var q = printf("SELECT url,code FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT fid FROM enterprise_detail) %s", condition, limit);
+        var q = printf("SELECT url,id FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT id FROM enterprise_detail) %s", condition, limit);
         log._logR('Mysql::getNoDetailPageUrls', q);
         this.connection_.query(q, function (error, results, fields) {
             if (!error) {
@@ -246,12 +285,12 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    verifyCompanyExists(code, callback) {
+    verifyCompanyExists(id, callback) {
         if (!this.check()) {
             callback(false);
             return;
         }
-        var q = printf('select 1 from enterprise_base where code = \'%s\' limit 1;', code);
+        var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
         this.connection_.query(q, function (error, results, fields) {
             if (!error) {
                 callback(results.length == 1);
@@ -262,12 +301,12 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    verifyCompanyPageExists(code, callback) {
+    verifyCompanyPageExists(id, callback) {
         if (!this.check()) {
             callback(false);
             return;
         }
-        var q = printf('select 1 from enterprise_base a,enterprise_detail b where a.id = b.fid and a.code = \'%s\' limit 1;', code);
+        var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
         this.connection_.query(q, function (error, results, fields) {
             if (!error) {
                 callback(results.length == 1);
@@ -278,137 +317,86 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    updateCompanyUrlVerified(code,valid,callback){
+    updateCompanyUrlVerified(id, valid, callback) {
         if (!this.check()) {
             callback(false);
             return;
         }
         //valid can be null.
-        var q = printf("UPDATE enterprise_base SET urlValid = %s WHERE code = '%s';", !!valid?'NULL':valid,code);
+        var q = printf("UPDATE enterprise_base SET urlValid = %s WHERE id = %d;", !!valid ? 'NULL' : valid, id);
         this.connection_.query(q, function (error, results, fields) {
             if (!error) {
-                if( callback )
+                if (callback)
                     callback(true);
             } else {
                 log._logE('Mysql::updateCompanyUrlVerified', q, error.stack);
-                if( callback )
+                if (callback)
                     callback(false);
             }
         });
     }
 
-    insertCompany(desc, callback) {
-        if (!this.check()) {
-            callback(false);
-            return;
-        }
+    insertCompany(desc) {
         var self = this;
-        self.verifyCompanyExists(desc.company_id, function (exists) {
-            if (exists) {
-                log._logE('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
-                console.log('Mysql::insertCompany', 'company code with', desc.company_id, 'already exists.');
-                callback(false);
-            } else {
-                // var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) \
-                // select '%s','%s','%s','%s','%s',NOW() from DUAL where not exists \
-                // (select id from enterprise_base where code = '%s');",
-
-                //var q = printf("insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) values('%s','%s','%s','%s','%s',NOW());",
-                //     desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
-                // self.connection_.query(q, function (error, results, fields) {
-                //     if (!error) {
-                //         callback(true);
-                //     } else {
-                //         log._logE('Mysql::insertCompany', q, error.stack);
-                //         callback(false);
-                //     }
-                // });
-                //put to cache.
-                var q = printf("('%s','%s','%s','%s','%s',NOW())",
-                    desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
-                self.insert_com_brief_queue_.push(q);
-                console.log('Mysql::insertCompany', 'cache->', self.insert_com_brief_queue_.length);
-                self.insertCompanyBatch();//maybe run the batch.
-                callback(true);
-            }
-        })
+        var q = printf("(%d,'%s','%s','%s','%s',NOW())",
+            desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
+        self.queues_.insert_com_breif.push(q);
+        console.log('Mysql::insertCompany', 'cache->', self.queues_.insert_com_breif.length);
+        self.insertCompanyBatch();//maybe run the batch.
     }
 
-    insertCompanyBatch(force) {
+    insertCompanyBatch(force, callback) {
         if (!this.check()) {
-            callback(false);
             return;
         }
         var self = this;
         var batch_func = function (limit) {
-            if (limit <= 0)
+            if (limit <= 0) {
+                if (callback)
+                    callback();
                 return;
-            var coms = [];
-            var q = "insert into enterprise_base(code,keyName,fullName,url,briefDesc,recordTime) values";
+            }
+            var sql = "insert into enterprise_base(id,keyName,fullName,url,briefDesc,recordTime) values";
+            var q = sql;
             for (var i = 0; i < limit; i++) {
-                var item = self.insert_com_brief_queue_.splice(0, 1)[0];
+                var item = self.queues_.insert_com_breif.splice(0, 1)[0];
                 q += item;
                 q += (i == limit - 1) ? ';' : ',';
-                coms.push([item.html]);
             }
             console.log(q);
-            self.connection_.query(q, coms, function (error, results, fields) {
+            self.connection_.query(q, function (error, results, fields) {
                 if (!!error) {
                     console.log(error.stack);
                 }
                 log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
+                if (callback)
+                    callback();
             });
         }
         if (true == force) {
-            batch_func(self.insert_com_brief_queue_.length);//batch all.
+            batch_func(self.queues_.insert_com_breif.length);//batch all.
         }
-        else if (DbOperatorTYC.cache_size_ <= self.insert_com_brief_queue_.length) {
-            batch_func(DbOperatorTYC.cache_size_);
+        else if (DbOperatorTYC.cache_size_.brief <= self.queues_.insert_com_breif.length) {
+            batch_func(DbOperatorTYC.cache_size_.brief);
         } else {
             //setup a timer
-            if (0 < self.insert_com_brief_queue_.length) {
+            if (0 < self.queues_.insert_com_breif.length) {
                 setTimeout(function () {
-                    batch_func(self.insert_com_brief_queue_.length);
+                    batch_func(self.queues_.insert_com_breif.length);
                 }, DbOperatorTYC.cache_time_out_ * 1000);
             }
         }
     }
 
     insertCompanyPage(desc, html, callback) {
-        if (!this.check()) {
-            callback(false);
-            return;
-        }
         var self = this;
-        self.verifyCompanyPageExists(desc.company_id, function (exists) {
-            if (exists) {
-                log._logE('Mysql::insertCompanyPage', 'company code with', desc.company_id, 'already exists.');
-                callback(false);
-            } else {
-                // var fid = printf("(select id from enterprise_base where code='%s' limit 1)", desc.company_id);
-                // var insert_params = [html];
-                // var q = printf("insert into enterprise_detail(fid,detailDesc,html,recordTime) values(%s,'%s',?,NOW());",
-                //     fid, JSON.stringify(desc));
-                // self.connection_.query(q, insert_params, function (error, results, fields) {
-                //     if (!error) {
-                //         log._logR('Mysql::insertCompanyPage','Succeed.');
-                //         callback(true);
-                //     } else {
-                //         log._logE('Mysql::insertCompanyPage', q, error.stack);
-                //         callback(false);
-                //     }
-                // });
-                self.insert_com_page_queue_.push({ desc: desc, html: html });
-                console.log('Mysql::insertCompanyPage', 'cache->', self.insert_com_page_queue_.length);
-                self.insertCompanyPageBatch();//maybe run the batch.
-                callback(true);
-            }
-        })
+        self.queues_.insert_com_page.push({ desc: desc, html: html });
+        console.log('Mysql::insertCompanyPage', 'cache->', self.queues_.insert_com_page.length);
+        self.insertCompanyPageBatch();//maybe run the batch.
     }
 
-    insertCompanyPageBatch(force) {
+    insertCompanyPageBatch(force, callback) {
         if (!this.check()) {
-            callback(false);
             return;
         }
         var self = this;
@@ -416,11 +404,10 @@ class DbOperatorTYC extends dbop {
             if (limit <= 0)
                 return;
             var htmls = [];
-            var q = "insert into enterprise_detail(fid,detailDesc,html,recordTime) values";
+            var q = "insert into enterprise_detail(id,detailDesc,html,recordTime) values";
             for (var i = 0; i < limit; i++) {
-                var item = self.insert_com_page_queue_.splice(0, 1)[0];
-                var fid = printf("(select id from enterprise_base where code='%s' limit 1)", item.desc.company_id);
-                q += printf("(%s,'%s',?,NOW())", fid, JSON.stringify(item.desc));
+                var item = self.queues_.insert_com_page.splice(0, 1)[0];
+                q += printf("(%s,'%s',?,NOW())", item.desc.company_id, JSON.stringify(item.desc));
                 q += (i == limit - 1) ? ';' : ',';
                 htmls.push([item.html]);
             }
@@ -430,23 +417,83 @@ class DbOperatorTYC extends dbop {
                     console.log(error.stack);
                 }
                 log._logR('Mysql::insertCompanyPageBatch', 'Completed with', limit, 'jobs...');
+                if (callback) {
+                    callback();
+                }
             });
         }
         if (true == force) {
-            batch_func(self.insert_com_page_queue_.length);
+            batch_func(self.queues_.insert_com_page.length);
         }
-        else if (DbOperatorTYC.cache_size_ <= self.insert_com_page_queue_.length) {
-            batch_func(DbOperatorTYC.cache_size_);
+        else if (DbOperatorTYC.cache_size_.page <= self.queues_.insert_com_page.length) {
+            batch_func(DbOperatorTYC.cache_size_.page);
         } else {
             //setup a timer
-            if (0 > self.insert_com_page_queue_.length) {
+            if (0 > self.queues_.insert_com_page.length) {
                 setTimeout(function () {
-                    batch_func(self.insert_com_page_queue_.length);
+                    batch_func(self.queues_.insert_com_page.length);
                 }, DbOperatorTYC.cache_time_out_ * 1000);
             }
         }
     }
+
+    screenPendingInsertDatas(datas, callback) {
+        //building searching-conditions.
+        if (0 == datas.length || !this.check()) {
+            if (callback)
+                callback(false);//no datas.
+            return;
+        }
+        var search_brief = 'select id from enterprise_base where ';
+        var search_detail = 'select id from enterprise_detail where ';
+        for (var d in datas) {
+            var data = datas[d];
+            search_brief += printf("id=%d", data.id);
+            search_brief += (d == datas.length - 1) ? ';' : ' or ';
+            search_detail += printf("id=%d", data.id);
+            search_detail += (d == datas.length - 1) ? ';' : ' or ';
+        }
+        console.log('Mysql::screenPendingInsertDatas', 'brief:', search_brief);
+        console.log('Mysql::screenPendingInsertDatas', 'detail:', search_detail);
+        var func_mv = function (id, brief) {
+            for (var d in datas) {
+                var data = datas[d];
+                if (data.id == id) {
+                    brief ? data.brief_exist = true : data.detail_exist = true;
+                    break;
+                }
+            }
+        }
+        var self = this;
+        self.connection_.query(search_brief, function (error, results, fields) {
+            if (!error) {
+                //fill datas.
+                for (var r in results) {
+                    func_mv(results[r].id, true);
+                }
+                //next
+                self.connection_.query(search_detail, function (error, results, fields) {
+                    if (!error) {
+                        for (var r in results) {
+                            func_mv(results[r].id, false);
+                        }
+                        if (callback)
+                            callback(true);
+                    } else {
+                        log._logR('Mysql::screenPendingInsertDatas', search_detail, error.stack);
+                        if (callback)
+                            callback(false);
+                    }
+                });
+            } else {
+                log._logR('Mysql::screenPendingInsertDatas', search_brief, error.stack);
+                if (callback)
+                    callback(false);
+            }
+        });
+    }
 };
+
 module.exports = DbOperatorTYC;
 
 //select TABLE_NAME from INFORMATION_SCHEMA.TABLES where TABLE_NAME='enterprise_base_index';

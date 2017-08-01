@@ -12,6 +12,7 @@ git reset --hard HEAD
 chmod 777 *.sh
 
 (.*)(proxy request succeed...)|(proxy released...)(.*)\n
+(.*)Time spent(.*)\n
 
 //other methods:
 1.  安装完成后，在开始菜单里找到“Git”->“Git Bash”

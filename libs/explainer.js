@@ -1,4 +1,6 @@
 "use strict";
+const log = require('./log');
+
 //a base explainer class
 const async = require('async');
 class MethodBase{
@@ -8,11 +10,19 @@ class MethodBase{
         this.type_ = type;//normal,finale
         this.pre_ = null;//to form a double-link list,pre method.
         this.next_ = null;//to form a double-link list,pre method.
+        this.begin_time_ = 0;//task begin time.
+        this.sub_task_begin_time_ = 0;//sub task begin time.
     }
     finish(callback) {
         if (0 <= this.type_.indexOf('final')) {
-            if( this.explainer_.emitter_.notify_done_ )
+            if( this.explainer_.emitter_.notify_done_ ){
+                var first_method = this;
+                while( first_method.pre_ ){
+                    first_method = first_method.pre_;
+                }
+                log._logR("Method::Done",'Time spent:',(new Date()).valueOf() - first_method.begin_time_);
                 this.explainer_.emitter_.notify_done_();
+            }
         }
         callback(null);
     }

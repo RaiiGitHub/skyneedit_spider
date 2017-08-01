@@ -2,9 +2,10 @@
 class SearchEmitter {
     //emit all jobs.
     //explainer should be set outside.
-    constructor(dboperator,proxyvisitor,explainer, urlentity) {
+    constructor(dboperator,proxyvisitor,innerindex,explainer,urlentity) {
         this.dboperator_ = dboperator;
         this.porxy_vistor_ = proxyvisitor;
+        this.inner_index_ = innerindex;//inner index.
         this.explainer_ = explainer;
         this.urlentity_ = urlentity;
         this.notify_done_ = null;//function.

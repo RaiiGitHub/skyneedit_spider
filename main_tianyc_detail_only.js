@@ -53,6 +53,7 @@ if (cluster.isMaster) {
   var db = new dbop;
   var proxy = new pv('proxycache_d');
   var concurrency_num = 0;
+  log.processID = process.pid;
   db.config();
   process.on('message', function (msg) {
     if (msg.condition) {
@@ -60,6 +61,7 @@ if (cluster.isMaster) {
       var e = new emitter(
         db,
         proxy,
+        concurrency_num,
         new explainer(msg.condition,msg.limit),
         new urlentity('', 1, '')//get fetching urls from db.
       );

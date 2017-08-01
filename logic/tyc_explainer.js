@@ -25,7 +25,10 @@ class MethodStep1 extends explainer.MethodBase {
                 'Connection': 'keep-alive'
             }
         };
-        log._logR('Method::Step1', 'begin...');
+        self.begin_time_ = (new Date()).valueOf();
+        log._logR('Method::Step1', 'Step begin...');
+        self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(ue.index_, 'running');//index as the searkey's id.
+        self.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
         //log._logR('Method::Step1', decode_key);
         var refreshproxy = function () {
             if (!proxy.refreshVisitor(null, function () {
@@ -43,6 +46,7 @@ class MethodStep1 extends explainer.MethodBase {
             else {
                 if (proxy.body_)
                     log._logR('Method::Step1', proxy.body_);
+                log._logR('Method::Step1', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent in requesting:', (new Date()).valueOf() - self.begin_time_);
                 fetcher.fetchPage(self, body, ue.key_, function (count) {
                     switch (count) {
                         case -1: {
@@ -59,9 +63,8 @@ class MethodStep1 extends explainer.MethodBase {
                             //one page,fetching it right now!
                             log._logR('Method::Step1', 'Found 1 page in', ue.url_);
                             var export_datas = null;
-                            fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
-                                log._logR('Method::Step1', 'Cur Detail urls Changed:',
-                                    self.next_.user_data_ ? self.next_.user_data_.size() : 0);
+                            fetcher.fetchBrief(self.next_, export_datas, body, new urlentity(ue.url_, 1, ue.key_), function (ok) {
+                                log._logR('Method::Step1', 'Verify url-count:', self.next_.user_data_ ? self.next_.user_data_.size() : 0);
                                 if (ok)
                                     self.finish(callback);
                                 else {
@@ -75,9 +78,8 @@ class MethodStep1 extends explainer.MethodBase {
                             log._logR('Method::Step1', 'Found', count, 'pages in', ue.url_);
                             //fetch the first page as well.
                             var export_datas = null;
-                            fetcher.fetchBrief(self.next_, export_datas, body, ue, function (ok) {
-                                log._logR('Method::Step1', 'Cur Detail urls Changed:',
-                                    self.next_.user_data_ ? self.next_.user_data_.size() : 0);
+                            fetcher.fetchBrief(self.next_, export_datas, body, new urlentity(ue.url_, 1, ue.key_), function (ok) {
+                                log._logR('Method::Step1', 'Verify url-count:', self.next_.user_data_ ? self.next_.user_data_.size() : 0);
                                 if (ok)
                                     self.finish(callback);
                                 else {
@@ -97,6 +99,7 @@ class MethodStep1 extends explainer.MethodBase {
 //step2 is to fetch the rest pages in a sequence.
 class MethodStep2 extends explainer.MethodBase {
     sub(callback, cb_parent) {
+        log._logR('Method::Step2', 'StepOfSub begin...');
         var self = this;
         var up = self.pre_.user_data_;
         var ue = up.popFront();
@@ -110,6 +113,7 @@ class MethodStep2 extends explainer.MethodBase {
                 'Connection': 'keep-alive'
             }
         };
+        self.sub_task_begin_time_ = (new Date()).valueOf();
         //log._logR('Method::Step2', decode_key);
         var handlefunc = function () {
             up.stamp();
@@ -119,6 +123,9 @@ class MethodStep2 extends explainer.MethodBase {
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
+                var now_time = (new Date()).valueOf();
+                log._logR('Method::Step2', 'innder_index:', self.explainer_.emitter_.inner_index_, 'StepOfSub end,Time spent:', now_time - self.sub_task_begin_time_);
+                self.sub_task_begin_time_ = now_time;
                 callback(null);
             }
         };
@@ -139,6 +146,7 @@ class MethodStep2 extends explainer.MethodBase {
             } else {
                 if (proxy.body_)
                     log._logR('Method::Step2', proxy.body_);
+                log._logR('Method::Step2', 'innder_index:', self.explainer_.emitter_.inner_index_, '(StepOfSub)Time spent in requesting:', (new Date()).valueOf() - self.sub_task_begin_time_);
                 var export_datas = null;
                 fetcher.fetchBrief(self, export_datas, body, ue, function (ok) {
                     if (!ok) {
@@ -153,7 +161,7 @@ class MethodStep2 extends explainer.MethodBase {
     }
     execute(callback) {
         //build task async
-        log._logR('Method::Step2', 'begin...');
+        log._logR('Method::Step2', 'Step begin...');
         log._logR('Method::Step2', 'Cur Detail urls Changed:',
             this.user_data_ ? this.user_data_.size() : 0);
         if (null == this.pre_) {
@@ -161,6 +169,9 @@ class MethodStep2 extends explainer.MethodBase {
             callback(null);
             return;
         }
+        var self = this;
+        this.begin_time_ = (new Date()).valueOf();
+        log._logR('Method::Step1', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
         var up = this.pre_.user_data_;
         if (null == up) {
             log._logR('Method::Step2', 'visit denined.');
@@ -169,7 +180,6 @@ class MethodStep2 extends explainer.MethodBase {
         }
         if (0 < up.container_.length) {
             var tasks = [];
-            var self = this;
             for (var ue in up.container_) {
                 tasks.push(function (cb_sub) {
                     self.sub(cb_sub, callback);
@@ -183,23 +193,13 @@ class MethodStep2 extends explainer.MethodBase {
     }
 };
 
-//step3 is to fetch the detail pages in a sequence.
+//step3 is to fetch the detail pages in a sequence,meanwhile,will verify whether the datas were in db or not.
 class MethodStep3 extends explainer.MethodBase {
     sub(callback, cb_parent) {
+        log._logR('Method::Step3', 'StepOfSub begin...');
         var self = this;
         var up = self.pre_.user_data_;
         var ue = up.popFront();
-        var proxy = self.explainer_.emitter_.porxy_vistor_;
-        var request = proxy.request_;
-        //var decode_key = urlentity.decodeUrl(ue.key_);
-        var options = {
-            url: ue.url_,
-            headers: {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
-                'Connection': 'keep-alive'
-            }
-        };
-        //log._logR('Method::Step3', decode_key);
         var handlefunc = function () {
             up.stamp();
             if (up.empty()) {
@@ -209,6 +209,9 @@ class MethodStep3 extends explainer.MethodBase {
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
+                var now_time = (new Date()).valueOf();
+                log._logR('Method::Step3', 'innder_index:', self.explainer_.emitter_.inner_index_, 'StepOfSub end,Time spent:', now_time - self.sub_task_begin_time_);
+                self.sub_task_begin_time_ = now_time;
                 callback(null);
             }
         };
@@ -221,6 +224,21 @@ class MethodStep3 extends explainer.MethodBase {
                 handlefunc();
             }
         }
+        if (ue.detail_exist) {
+            handlefunc();
+            return;
+        }
+        var proxy = self.explainer_.emitter_.porxy_vistor_;
+        var request = proxy.request_;
+        var options = {
+            url: ue.ue.url_,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
+                'Connection': 'keep-alive'
+            }
+        };
+
+        self.sub_task_begin_time_ = (new Date()).valueOf();
         request(options, function (err, res, body) {
             if (err) {
                 log._logR('Method::Step3', 'server err.Query denied in this proxy.');
@@ -228,9 +246,10 @@ class MethodStep3 extends explainer.MethodBase {
             } else {
                 if (proxy.body_)
                     log._logR('Method::Step3', proxy.body_);
-                log._logR('Method::Step3', 'Fetching detail url:', ue.url_, ue.index_, '/', self.detail_url_num_);
+                log._logR('Method::Step3', 'innder_index:', self.explainer_.emitter_.inner_index_, '(StepOfSub)Time spent in requesting:', (new Date()).valueOf() - self.sub_task_begin_time_);
+                log._logR('Method::Step3', 'Fetching detail url:', ue.ue.url_, ue.ue.index_, '/', self.detail_url_num_);
                 var export_datas = null;
-                fetcher.fetchDetail(self, export_datas, body, ue, function (ok) {
+                fetcher.fetchDetail(self, export_datas, body, ue.ue, function (ok) {
                     if (!ok) {
                         log._logR('Method::Step3', 'proxy may be denined,refreshing...');
                         refreshproxy();
@@ -242,7 +261,6 @@ class MethodStep3 extends explainer.MethodBase {
         });
     }
     execute(callback) {
-        //build task async
         log._logR('Method::Step3', 'begin...');
         var self = this;
         if (null == self.pre_) {
@@ -250,31 +268,56 @@ class MethodStep3 extends explainer.MethodBase {
             self.finish(callback);
             return;
         }
-        var up = self.pre_.user_data_;
-        if (null == up) {
+        this.begin_time_ = (new Date()).valueOf();
+        log._logR('Method::Step2', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
+        var up_to_verify = self.pre_.user_data_;
+        if (null == up_to_verify) {
             log._logR('Method::Step3', 'visit denined.');
             self.finish(callback);
             return;
         }
-        self.detail_url_num_ = up.container_.length;
-
-        //check whether exists sub tasks.
-        if (0 < up.container_.length) {
-            var tasks = [];
-            for (var ue in up.container_) {
-                tasks.push(function (cb_sub) {
-                    self.sub(cb_sub, callback);
-                });
+        log._logR('Method::Step3', 'urls:',up_to_verify.size());
+        //verify datas.
+        self.explainer_.emitter_.dboperator_.screenPendingInsertDatas(up_to_verify.container_, function () {
+            //insert and fill brief
+            for (var d = 0; d < up_to_verify.size(); d++) {
+                var utv = up_to_verify.container_[d];
+                if (!utv.brief_exist) {
+                    self.explainer_.emitter_.dboperator_.insertCompany(
+                        { company_id: utv.id, key: utv.key, company_name: utv.name, company_detail_url: utv.ue.url_ }
+                    );
+                }
             }
-            //forcely run batch of inserting company.
-            self.explainer_.emitter_.dboperator_.insertCompanyBatch(true);
-            async.waterfall(tasks, function (err, result) {
-                //need to be done in the callback funcions.
+            self.explainer_.emitter_.dboperator_.insertCompanyBatch(true, function () {
+                //run the fetching of details.
+                self.detail_url_num_ = up_to_verify.size();
+                if (0 < up_to_verify.size()) {
+                    var tasks = [];
+                    for (var ue in up_to_verify.container_) {
+                        tasks.push(function (cb_sub) {
+                            self.sub(cb_sub, callback);
+                        });
+                    }
+                    async.waterfall(tasks, function (err, result) {
+                        //need to be done in the callback funcions.
+                    });
+                } else {
+                    log._logR('Method::Step3', 'No need to spidering detail datas.');
+                    self.finish(callback);
+                }
             });
-        } else {
-            log._logR('Method::Step3', 'No need to spidering detail datas.');
-            self.finish(callback);
-        }
+        });
+    }
+};
+
+//final
+class MethodStepFinal extends explainer.MethodBase {
+    execute(callback) {
+        log._logR('Method::Step::final', 'Mission done.');
+        var self = this;
+        var ue = self.explainer_.emitter_.urlentity_;
+        self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(ue.index_, 'finished');//index as the searkey's id.
+        self.finish(callback);
     }
 };
 
@@ -285,7 +328,8 @@ class ExplainerTYC extends explainer.ExplainerBase {
         this.methods_ = [
             new MethodStep1('step1', this),
             new MethodStep2('step2', this),
-            new MethodStep3('step3-final', this)
+            new MethodStep3('step3', this),
+            new MethodStepFinal('final', this),
         ];
         this.buildMethodDoubleLink();
     }
