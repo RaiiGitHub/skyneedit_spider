@@ -285,9 +285,7 @@ class MethodStep3 extends explainer.MethodBase {
             for (var d = 0; d < up_to_verify.size(); d++) {
                 var utv = up_to_verify.container_[d];
                 if (!utv.brief_exist) {
-                    self.explainer_.emitter_.dboperator_.insertCompany(
-                        { company_id: utv.id, key: utv.key, company_name: utv.name, company_detail_url: utv.ue.url_ }
-                    );
+                    self.explainer_.emitter_.dboperator_.insertCompany({brief:utv.brief,key:utv.key});
                 }
             }
             self.explainer_.emitter_.dboperator_.insertCompanyBatch(true, function (result) {
