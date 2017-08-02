@@ -17,6 +17,7 @@ class MethodStep1 extends explainer.MethodBase {
         var ue = self.explainer_.emitter_.urlentity_;
         var proxy = self.explainer_.emitter_.porxy_vistor_;
         var request = proxy.request_;
+        self.cookies_ = [];
         //var decode_key = urlentity.decodeUrl(ue.key_);
         var options = {
             url: ue.url_,
@@ -48,6 +49,8 @@ class MethodStep1 extends explainer.MethodBase {
                     log._logR('Method::Step1', proxy.body_);
                 log._logR('Method::Step1', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent in requesting:', (new Date()).valueOf() - self.begin_time_);
                 fetcher.fetchPage(self, body, ue.key_, function (count) {
+                    //save cookies.
+                    self.cookies_ = res.headers["set-cookie"];
                     //update.
                     self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(ue.index_, 'running', null, null, count);//index as the searkey's id.
                     switch (count) {
@@ -112,7 +115,8 @@ class MethodStep2 extends explainer.MethodBase {
             url: ue.url_,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
-                'Connection': 'keep-alive'
+                'Connection': 'keep-alive',
+                'Cookie': self.cookies_
             }
         };
         self.sub_task_begin_time_ = (new Date()).valueOf();
@@ -172,6 +176,7 @@ class MethodStep2 extends explainer.MethodBase {
             return;
         }
         var self = this;
+        self.cookies_ = self.pre_.cookies_;
         this.begin_time_ = (new Date()).valueOf();
         log._logR('Method::Step1', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
         var up = this.pre_.user_data_;
@@ -204,7 +209,7 @@ class MethodStep3 extends explainer.MethodBase {
         var ue = up.popFront();
         if (null == ue) {
             //already empty.
-            log._logR('Method::Step3', 'this data is broken,at:',up.size());
+            log._logR('Method::Step3', 'this data is broken,at:', up.size());
             callback(null);
             return;
         }
@@ -245,7 +250,8 @@ class MethodStep3 extends explainer.MethodBase {
             url: ue.ue.url_,
             headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; WOW64; rv:54.0) Gecko/20100101 Firefox/54.0',
-                'Connection': 'keep-alive'
+                'Connection': 'keep-alive',
+                'Cookie': self.cookies_
             }
         };
 
@@ -279,6 +285,7 @@ class MethodStep3 extends explainer.MethodBase {
             self.finish(callback);
             return;
         }
+        self.cookies_ = self.pre_.cookies_;
         this.begin_time_ = (new Date()).valueOf();
         log._logR('Method::Step2', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
         var up_to_verify = self.pre_.user_data_;
@@ -294,7 +301,7 @@ class MethodStep3 extends explainer.MethodBase {
             for (var d = 0; d < up_to_verify.size(); d++) {
                 var utv = up_to_verify.container_[d];
                 if (!utv.brief_exist) {
-                    self.explainer_.emitter_.dboperator_.insertCompany({brief:utv.brief,key:utv.key});
+                    self.explainer_.emitter_.dboperator_.insertCompany({ brief: utv.brief, key: utv.key });
                 }
             }
             self.explainer_.emitter_.dboperator_.insertCompanyBatch(true, function (result) {
@@ -302,7 +309,7 @@ class MethodStep3 extends explainer.MethodBase {
                     var kid = self.explainer_.emitter_.urlentity_.index_;
                     self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'failed', null, result.error.stack);//index as the searkey's id.
                     self.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
-                    log._logR('Method::Step3', 'key:', kid,'stack:',result.error.stack);
+                    log._logR('Method::Step3', 'key:', kid, 'stack:', result.error.stack);
                     self.finish(callback);
                 } else {
                     //run the fetching of details.

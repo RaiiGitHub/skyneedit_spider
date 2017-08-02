@@ -151,12 +151,13 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
                     data_result['company_detail_url'],
                     data_result['search_offset'],
                     printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])),
+                url_:data_result['company_detail_url'],//for urlentity using...
                 key: url_entity.key_,
                 id:data_result.company_id,
                 brief: data_result,
                 brief_exist: false,
                 detail_exist: false
-            }, false);
+            });
             if (index == contents.length + 1) {
                 log._logR('fetching brief', 'succeed.', 'urls:', container.user_data_.size(), 'index:', page_data.index, page_data.url);
                 if (callback) {

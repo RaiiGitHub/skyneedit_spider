@@ -30,10 +30,11 @@ Date.prototype.format = function (fmt) {
 class DbOperatorTYC extends dbop {
     constructor() {
         //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        super('localhost', 'root', 'admin111', 'tianyancha');
-        //super('localhost', 'root', 'mysql', 'tianyancha');
+        //super('localhost', 'root', 'admin111', 'tianyancha');
+        super('localhost', 'root', 'mysql', 'tianyancha');
         //insert-cache-ops
         this.queues_ = { insert_com_breif: [], insert_com_page: [], update_search: [] };
+        //this.id_history_ = { id_com_breif: [], id_com_page: [] };
         DbOperatorTYC.cache_size_ = { brief: 30, page: 10, update: 40 };
         DbOperatorTYC.cache_time_out_ = 120;
     }
@@ -187,8 +188,8 @@ class DbOperatorTYC extends dbop {
         }
         var now = (new Date()).format("yyyy-MM-dd hh:mm:ss");
         //error,finish,running
-        var st = status == 'running' ? (",searchStartTime='"+now+"'") : '';
-        var se = status != 'running' ? (",searchEndTime='"+now+"'") : '';
+        var st = status == 'running' ? (",searchStartTime='" + now + "'") : '';
+        var se = status != 'running' ? (",searchEndTime='" + now + "'") : '';
         var de = desc != null ? ",description='" + desc.replace(/'/g, '"') + "'" : '';
         var pc = pagecount != null ? ",pageCount=" + pagecount : '';
         var q = printf("update search_keys set status = '%s'%s%s%s%s where id=%d;", status, st, se, de, pc, keyid);
@@ -365,6 +366,7 @@ class DbOperatorTYC extends dbop {
         var q = printf("(%d,'%s','%s','%s','%s',NOW())",
             desc.brief.company_id, desc.key, desc.brief.company_name, desc.brief.company_detail_url, JSON.stringify(desc.brief));
         self.queues_.insert_com_breif.push(q);
+        //self.id_history_.id_com_breif.push(desc.brief.company_id);
         console.log('Mysql::insertCompany', 'cache->', self.queues_.insert_com_breif.length);
         self.insertCompanyBatch();//maybe run the batch.
     }
@@ -389,7 +391,7 @@ class DbOperatorTYC extends dbop {
                 q += item;
                 q += (i == limit - 1) ? ';' : ',';
             }
-            console.log(q);
+            log._logR('Mysql::insertCompanyBatch',q);
             self.connection_.query(q, function (error, results, fields) {
                 log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
                 if (!!error) {
@@ -421,6 +423,7 @@ class DbOperatorTYC extends dbop {
     insertCompanyPage(desc, html, callback) {
         var self = this;
         self.queues_.insert_com_page.push({ desc: desc, html: html });
+        //self.id_history_.id_com_page.push(desc.company_id);
         console.log('Mysql::insertCompanyPage', 'cache->', self.queues_.insert_com_page.length);
         self.insertCompanyPageBatch();//maybe run the batch.
     }
@@ -467,6 +470,24 @@ class DbOperatorTYC extends dbop {
         }
     }
 
+    // verifyCompanyInCache(id) {
+    //     for (var i in this.id_history_.id_com_breif) {
+    //         if (this.id_history_.id_com_breif[i] == id)
+    //             return true;
+    //     }
+    //     return false;
+    // }
+
+    // verifyCompanyPageInCache(id) {
+    //     for (var i in this.id_history_.id_com_page) {
+    //         if (this.id_history_.id_com_page[i] == id)
+    //             return true;
+    //     }
+    //     return false;
+
+    // }
+
+
     screenPendingInsertDatas(datas, callback) {
         //building searching-conditions.
         if (0 == datas.length || !this.check()) {
@@ -485,6 +506,8 @@ class DbOperatorTYC extends dbop {
         }
         console.log('Mysql::screenPendingInsertDatas', 'brief:', search_brief);
         console.log('Mysql::screenPendingInsertDatas', 'detail:', search_detail);
+        //log._logR('Mysql::screenPendingInsertDatas',JSON.stringify(datas));
+        var self = this;
         var func_mv = function (id, brief) {
             for (var d in datas) {
                 var data = datas[d];
@@ -494,7 +517,19 @@ class DbOperatorTYC extends dbop {
                 }
             }
         }
-        var self = this;
+        // //check whether exist in the id list already.
+        // for (var d in datas) {
+        //     var data = datas[d];
+        //     if (self.verifyCompanyInCache(data.id)) {
+        //         data.brief_exist = true;
+        //         log._logR('Mysql::screenPendingInsertDatas','data.brief_exist','ID',data.id);
+        //     } else if (self.verifyCompanyPageInCache(data.id)) {
+        //         data.detail_exist = true;
+        //         log._logR('Mysql::screenPendingInsertDatas','data.detail_exist','ID',data.id);
+        //     }
+        // }
+        
+        //check whether exist in db already.
         self.connection_.query(search_brief, function (error, results, fields) {
             if (!error) {
                 //fill datas.
