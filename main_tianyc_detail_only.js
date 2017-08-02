@@ -65,7 +65,9 @@ if (cluster.isMaster) {
         new explainer(msg.keys),
         new urlentity('', 1, '')//get fetching urls from db.
       );
+      db.begin();
       e.emit(true, function (failed) {
+        db.end();
         if (failed) {
           //failed...
           log._logR('Main::Failed', process.pid, 'Bye.');
@@ -74,7 +76,6 @@ if (cluster.isMaster) {
         }
         concurrency_num--;
         if (concurrency_num <= 0) {
-          db.end();
           e.ensureReleaseProxy();
         }
       });

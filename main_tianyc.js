@@ -83,6 +83,7 @@ if (cluster.isMaster) {
     else if (msg.offset) {
       var index = msg.index;
       log._logR('Main::Log', log.processID, 'concurrency:', index, '/', concurrency_num, 'Ready to log...');
+      db.begin();
       db.getSearchKeys(msg.offset, 1, function (results) {
         if (results) {
           var k = results[0].searchKey;
@@ -101,7 +102,6 @@ if (cluster.isMaster) {
               log._logR('Main::Failed', process.pid, 'Bye.');
               if (concurrency_done >= concurrency_num) {
                 e.ensureReleaseProxy();
-                db.end();
                 process.send({ nomoredata: true });
               }
             } else {
@@ -113,7 +113,6 @@ if (cluster.isMaster) {
           log._logR('Main::NomoreData', process.pid);
           if (concurrency_done >= concurrency_num) {
             e.ensureReleaseProxy();
-            db.end();
             process.send({ nomoredata: true });//no more datas.
           }
         }
