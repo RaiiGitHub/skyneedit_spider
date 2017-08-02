@@ -6,10 +6,31 @@ const async = require('async');
 const dbop = require('../libs/dboperator');
 const log = require('../libs/log');
 
+Date.prototype.format = function (fmt) {
+    var o = {
+        "M+": this.getMonth() + 1,                 //月份 
+        "d+": this.getDate(),                    //日 
+        "h+": this.getHours(),                   //小时 
+        "m+": this.getMinutes(),                 //分 
+        "s+": this.getSeconds(),                 //秒 
+        "q+": Math.floor((this.getMonth() + 3) / 3), //季度 
+        "S": this.getMilliseconds()             //毫秒 
+    };
+    if (/(y+)/.test(fmt)) {
+        fmt = fmt.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+    }
+    for (var k in o) {
+        if (new RegExp("(" + k + ")").test(fmt)) {
+            fmt = fmt.replace(RegExp.$1, (RegExp.$1.length == 1) ? (o[k]) : (("00" + o[k]).substr(("" + o[k]).length)));
+        }
+    }
+    return fmt;
+}
+
 class DbOperatorTYC extends dbop {
     constructor() {
-        super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        //super('localhost', 'root', 'admin111', 'tianyancha');
+        //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
+        super('localhost', 'root', 'admin111', 'tianyancha');
         //super('localhost', 'root', 'mysql', 'tianyancha');
         //insert-cache-ops
         this.queues_ = { insert_com_breif: [], insert_com_page: [], update_search: [] };
@@ -164,10 +185,11 @@ class DbOperatorTYC extends dbop {
                 callback(false);
             return;
         }
+        var now = (new Date()).format("yyyy-MM-dd hh:mm:ss");
         //error,finish,running
-        var st = status == 'running' ? ',searchStartTime=NOW()' : '';
-        var se = status != 'running' ? ',searchEndTime=NOW()' : '';
-        var de = desc != null ? ",description='" + desc + "'" : '';
+        var st = status == 'running' ? (",searchStartTime='"+now+"'") : '';
+        var se = status != 'running' ? (",searchEndTime='"+now+"'") : '';
+        var de = desc != null ? ",description='" + desc.replace(/'/g, '"') + "'" : '';
         var pc = pagecount != null ? ",pageCount=" + pagecount : '';
         var q = printf("update search_keys set status = '%s'%s%s%s%s where id=%d;", status, st, se, de, pc, keyid);
         console.log(q);
@@ -199,7 +221,7 @@ class DbOperatorTYC extends dbop {
             }
             mq.queries(sqls, [], function (err, result) {
                 if (!!err) {
-                    log._logE('Mysql::updateSearchKeyStatusBatch::Error',err.stack,JSON.stringify(sqls));
+                    log._logE('Mysql::updateSearchKeyStatusBatch::Error', err.stack, JSON.stringify(sqls));
                 }
                 log._logR('Mysql::updateSearchKeyStatusBatch', 'Completed with', limit, 'jobs...');
             });
@@ -372,7 +394,7 @@ class DbOperatorTYC extends dbop {
                 log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
                 if (!!error) {
                     console.log(error.stack);
-                    log._logR('Mysql::insertCompanyBatch::Error',error.stack);
+                    log._logR('Mysql::insertCompanyBatch::Error', error.stack);
                     if (callback)
                         callback({ succeed: false, error: error });
                 } else {

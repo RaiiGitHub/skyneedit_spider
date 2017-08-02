@@ -216,6 +216,7 @@ class MethodStep3 extends explainer.MethodBase {
                 var kid = self.explainer_.emitter_.urlentity_.index_;
                 self.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
                 self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'finished');//index as the searkey's id.
+                self.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
