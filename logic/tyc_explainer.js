@@ -200,6 +200,12 @@ class MethodStep3 extends explainer.MethodBase {
         var self = this;
         var up = self.pre_.user_data_;
         var ue = up.popFront();
+        if (null == ue) {
+            //already empty.
+            log._logR('Method::Step3', 'this data is broken,at:',up.size());
+            callback(null);
+            return;
+        }
         var handlefunc = function () {
             up.stamp();
             if (up.empty()) {
@@ -276,7 +282,7 @@ class MethodStep3 extends explainer.MethodBase {
             self.finish(callback);
             return;
         }
-        log._logR('Method::Step3', 'urls:',up_to_verify.size());
+        log._logR('Method::Step3', 'urls:', up_to_verify.size());
         //verify datas.
         self.explainer_.emitter_.dboperator_.screenPendingInsertDatas(up_to_verify.container_, function () {
             //insert and fill brief
