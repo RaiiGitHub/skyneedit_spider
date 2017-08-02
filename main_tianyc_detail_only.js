@@ -13,7 +13,7 @@ function onexit() {
   pv.releaseAllProxies(function () {
     log._logR('Main::Exit', 'Bye.');
     process.exit(0);
-  },'proxycache_d');
+  }, 'proxycache_d');
 }
 
 log.init('./datas/logs/detail', 'NORMAL', 'Windows', 'TYCDetailFetcher');
@@ -27,27 +27,28 @@ if (cluster.isMaster) {
     return;
   }
   var ws = parseInt(process_args[0]);
-  var limit = 2 <= process_args.length?parseInt(process_args[1]):null;
+  var limit = 2 <= process_args.length ? parseInt(process_args[1]) : null;
   var db = new dbop();
   db.config();
-  db.getCompanyMaxID(function (id) {
-    var sep = parseInt(id /ws);
-    log._logR('Main::Assign',ws,'*',sep);
-    if (id) {
-      var i = 1;
-      for (;;) {
-        var upb = Math.min(id, i + sep);
-        var condition = printf('id >= %s and id <= %s', i, upb);
-        log._logR('Main::Assign', 'From', i, 'To', upb);
-        var wp = cluster.fork();//work process.
-        wp.send({ condition: condition,limit:limit });
-        i = upb + 1;
-        if (upb == id) {
-          break;
+  db.getNoDetailPageUrls(function (results) {
+    var ave = parseInt(results.length / ws);
+    var index = 0;
+    log._logR('Main::Assign', ws, '*', ave);
+    for (var i = 0; i < ws; i++) {
+      var wp = cluster.fork();//work process.
+      var keys = [];
+      if (i == ws - 1) {
+        for (; index < results.length; ++index) {
+          keys.push(results[index]);
         }
+      } else {
+        for (; index <= (i + 1) * ave; ++index)
+          keys.push(results[index]);
       }
+      log._logR('Main::Offset',index);
+      wp.send({keys:keys});
     }
-  });
+  }, null, limit);
 
 } else {
   var db = new dbop;
@@ -56,13 +57,13 @@ if (cluster.isMaster) {
   log.processID = process.pid;
   db.config();
   process.on('message', function (msg) {
-    if (msg.condition) {
+    if (msg.keys) {
       concurrency_num++;
       var e = new emitter(
         db,
         proxy,
         concurrency_num,
-        new explainer(msg.condition,msg.limit),
+        new explainer(msg.keys),
         new urlentity('', 1, '')//get fetching urls from db.
       );
       e.emit(true, function (failed) {
@@ -70,10 +71,10 @@ if (cluster.isMaster) {
           //failed...
           log._logR('Main::Failed', process.pid, 'Bye.');
         } else {
-          log._logR('Main::finished', process.pid,'rest is',concurrency_num);
+          log._logR('Main::finished', process.pid, 'rest is', concurrency_num);
         }
         concurrency_num--;
-        if( concurrency_num <= 0 )
+        if (concurrency_num <= 0)
           e.ensureReleaseProxy();
       });
     }

@@ -274,8 +274,8 @@ class DbOperatorTYC extends dbop {
             callback(null);
             return;
         }
-        var limit = arguments[1] ? printf('limit %d;', arguments[1]) : '';
-        var condition = arguments[2] ? (arguments[2] + ' and') : '';
+        var limit = null != arguments[1] ? printf('limit %d;', arguments[1]) : '';
+        var condition = null != arguments[2] ? (arguments[2] + ' and') : '';
         var q = printf("SELECT url,id FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT id FROM enterprise_detail) %s", condition, limit);
         log._logR('Mysql::getNoDetailPageUrls', q);
         this.connection_.query(q, function (error, results, fields) {

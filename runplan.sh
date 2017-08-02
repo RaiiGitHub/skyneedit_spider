@@ -7,7 +7,7 @@ IPLIMIT=$2
 TYC=`ps -fe|grep main_tianyc |grep -v grep|wc -l|awk '{print $1}'`
 ((TYC--))
 echo $TYC
-if (($TYC < $PROCESSLIMIT))
+if (($TYC < $PROCESSLIMIT/2))
 then
     echo "clean processes....."
 	PROCESS=`ps -ef|grep main_tianyc|grep -v grep|grep -v PPID|awk '{ print $2}'`

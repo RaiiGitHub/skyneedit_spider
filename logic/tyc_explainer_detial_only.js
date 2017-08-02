@@ -16,20 +16,17 @@ class MethodStep1 extends explainer.MethodBase {
         var proxy = self.explainer_.emitter_.porxy_vistor_;
         var request = proxy.request_;
         var dbop = self.explainer_.emitter_.dboperator_;
-        var condition = self.explainer_.condition_;
-        var limit = self.explainer_.limit_;
+        var keys = self.explainer_.keys_;
         log._logR('Method::Step1', 'begin...');
-        dbop.getNoDetailPageUrls(function (results) {
-            if (results) {
-                log._logR('Method::Step1', 'Found', results.length, 'Unfinished details.begin...');
-                self.user_data_ = results;
-                self.finish(callback);//to next.
-            } else {
-                //failed.toggle to next.
-                log._logR('Method::Step1', 'Detail URL Results Not Found');
-                self.finish(callback);
-            }
-        }, limit, condition);
+        if (keys) {
+            log._logR('Method::Step1', 'Found', keys.length, 'Unfinished details.begin...');
+            self.user_data_ = keys;
+            self.finish(callback);//to next.
+        } else {
+            //failed.toggle to next.
+            log._logR('Method::Step1', 'Detail URL Results Not Found');
+            self.finish(callback);
+        }
     }
 };
 
@@ -115,8 +112,8 @@ class MethodStep2 extends explainer.MethodBase {
             self.user_data_ = new urlpool;
             for (var i in fetch_list) {
                 var item = fetch_list[i];
-                self.user_data_.add(new urlentity(item.url, parseInt(i) + 1, printf('x.detail.%s.x', item.code)));
-                console.log('Method::Step2', 'Building index:', parseInt(i) + 1, '/', fetch_list.length);
+                self.user_data_.add(new urlentity(item.url, parseInt(i) + 1, printf('x.detail.%s.x', item.id)));
+                console.log('Method::Step2', 'Building index:', parseInt(i) + 1, '/', fetch_list.length,item.id,item.url);
                 tasks.push(function (cb_sub) {
                     self.sub(cb_sub, callback);
                 });
@@ -139,10 +136,9 @@ class MethodStepFinal extends explainer.MethodBase {
 };
 
 class ExplainerDetailFetcherTYC extends explainer.ExplainerBase {
-    constructor(condition, limit) {
+    constructor(keys) {
         super();
-        this.condition_ = condition;
-        this.limit_ = limit;
+        this.keys_ = keys;
     }
     setupMethod(emitter) {
         super.setupMethod(emitter);

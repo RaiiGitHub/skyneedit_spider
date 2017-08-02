@@ -15,7 +15,7 @@ class DbOperator {
     config() {
         var connect_size = arguments[0] ? arguments[0] : 1;
         if (!DbOperator.static_max_con_) {
-            DbOperator.static_max_con_ = 2;//max connection.
+            DbOperator.static_max_con_ = 1;//max connection.
             DbOperator.static_connections_ = [];
         }
         for (var i = 0; i < connect_size; i++) {

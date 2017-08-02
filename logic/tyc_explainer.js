@@ -213,7 +213,9 @@ class MethodStep3 extends explainer.MethodBase {
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
                 //forcely run batch of inserting company-details.
+                var kid = self.explainer_.emitter_.urlentity_.index_;
                 self.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
+                self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'finished');//index as the searkey's id.
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
@@ -298,7 +300,8 @@ class MethodStep3 extends explainer.MethodBase {
                 if (false == result.succeed) {
                     var kid = self.explainer_.emitter_.urlentity_.index_;
                     self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'failed', null, result.error.stack);//index as the searkey's id.
-                    log._logR('Method::Step3', 'key:', kid);
+                    self.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
+                    log._logR('Method::Step3', 'key:', kid,'stack:',result.error.stack);
                     self.finish(callback);
                 } else {
                     //run the fetching of details.
@@ -327,9 +330,6 @@ class MethodStep3 extends explainer.MethodBase {
 class MethodStepFinal extends explainer.MethodBase {
     execute(callback) {
         log._logR('Method::Step::final', 'Mission done.');
-        var self = this;
-        var ue = self.explainer_.emitter_.urlentity_;
-        self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(ue.index_, 'finished');//index as the searkey's id.
         self.finish(callback);
     }
 };
