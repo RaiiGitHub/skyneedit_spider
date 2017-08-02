@@ -157,7 +157,7 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    updateSearchKeyStatus(keyid, status, callback,desc,pagecount) {
+    updateSearchKeyStatus(keyid, status, callback, desc, pagecount) {
         var self = this;
         if (!self.check()) {
             if (callback)
@@ -167,9 +167,9 @@ class DbOperatorTYC extends dbop {
         //error,finish,running
         var st = status == 'running' ? ',searchStartTime=NOW()' : '';
         var se = status != 'running' ? ',searchEndTime=NOW()' : '';
-        var de = desc != null?",description='"+desc+"'":'';
-        var pc = pagecount != null?",pageCount="+pagecount:'';
-        var q = printf("update search_keys set status = '%s'%s%s%s%s where id=%d;", status, st, se,de,pc,keyid);
+        var de = desc != null ? ",description='" + desc + "'" : '';
+        var pc = pagecount != null ? ",pageCount=" + pagecount : '';
+        var q = printf("update search_keys set status = '%s'%s%s%s%s where id=%d;", status, st, se, de, pc, keyid);
         console.log(q);
         self.queues_.update_search.push(q);
         self.updateSearchKeyStatusBatch();
@@ -199,10 +199,9 @@ class DbOperatorTYC extends dbop {
             }
             mq.queries(sqls, [], function (err, result) {
                 if (!!err) {
-                    console.log(err);
-                } else {
-                    log._logR('Mysql::updateSearchKeyStatusBatch', 'Completed with', limit, 'jobs...');
+                    log._logE('Mysql::updateSearchKeyStatusBatch::Error',err.stack,JSON.stringify(sqls));
                 }
+                log._logR('Mysql::updateSearchKeyStatusBatch', 'Completed with', limit, 'jobs...');
             });
         }
         if (true == force) {
@@ -373,6 +372,7 @@ class DbOperatorTYC extends dbop {
                 log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
                 if (!!error) {
                     console.log(error.stack);
+                    log._logR('Mysql::insertCompanyBatch::Error',error.stack);
                     if (callback)
                         callback({ succeed: false, error: error });
                 } else {

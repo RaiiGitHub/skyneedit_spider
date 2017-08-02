@@ -85,7 +85,7 @@ class ProxyVisitor {
                     if (callback)
                         callback();
                 } else {
-                    console.log('Proxy', 'initVisitor Failed:', self);
+                    log._logR('Proxy', 'initVisitor Failed:', self);
                 }
             });
         }

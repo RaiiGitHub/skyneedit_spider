@@ -58,7 +58,6 @@ class DbOperator {
         var func_result = function () {
             if (true == ok) {
                 log._logR('SQL::', con ? 'Connect' : 'Disconnect', 'OK');
-                log._logE('SQL::', con ? 'Connect' : 'Disconnect', 'OK');
                 return true;
             } else {
                 log._logR('SQL::', con ? 'Connect' : 'Disconnect', 'Error', message);
