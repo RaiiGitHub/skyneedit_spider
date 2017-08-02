@@ -73,8 +73,10 @@ if (cluster.isMaster) {
           log._logR('Main::finished', process.pid, 'rest is', concurrency_num);
         }
         concurrency_num--;
-        if (concurrency_num <= 0)
+        if (concurrency_num <= 0) {
+          db.end();
           e.ensureReleaseProxy();
+        }
       });
     }
   });

@@ -1,9 +1,5 @@
 "use strict";
 const mysql = require('mysql');
-const co = require('co');
-const log = require('./log');
-
-
 class DbOperator {
     constructor(host, user, psw, dbname) {
         this.host_ = host;
@@ -20,6 +16,12 @@ class DbOperator {
     }
     check(){
         return !!this.pool_;
+    }
+    end(){
+        if(!check()){
+            return;
+        }
+        this.pool_.end();
     }
 };
 module.exports = DbOperator;
