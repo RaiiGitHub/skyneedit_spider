@@ -101,7 +101,6 @@ if (cluster.isMaster) {
               log._logR('Main::Failed', process.pid, 'Bye.');
               if (concurrency_done >= concurrency_num) {
                 e.ensureReleaseProxy();
-                db.connect(false);
                 process.send({ nomoredata: true });
               }
             } else {
@@ -113,7 +112,6 @@ if (cluster.isMaster) {
           log._logR('Main::NomoreData', process.pid);
           if (concurrency_done >= concurrency_num) {
             e.ensureReleaseProxy();
-            db.connect(false);
             process.send({ nomoredata: true });//no more datas.
           }
         }

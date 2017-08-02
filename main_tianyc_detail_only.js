@@ -75,7 +75,6 @@ if (cluster.isMaster) {
         concurrency_num--;
         if (concurrency_num <= 0)
           e.ensureReleaseProxy();
-          db.connect(false);
       });
     }
   });
