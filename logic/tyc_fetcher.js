@@ -151,9 +151,9 @@ function fetchBrief(container, export_datas, html, url_entity, callback, other) 
                     data_result['company_detail_url'],
                     data_result['search_offset'],
                     printf('%s.detail.%s.%s', page_data.key, data_result['company_id'], data_result['company_name'])),
-                id: data_result['company_id'],
-                name: data_result['company_name'],
                 key: url_entity.key_,
+                id:data_result.company_id,
+                brief: data_result,
                 brief_exist: false,
                 detail_exist: false
             }, false);

@@ -43,7 +43,7 @@ class DbOperatorTYC extends dbop {
             return;
         }
         var enterprise_base = "CREATE TABLE IF NOT EXISTS `enterprise_base`(\
-                        `id` int primary key COMMENT '公司（企业）代码，作为主键',\
+                        `id` bigint primary key COMMENT '公司（企业）代码，作为主键',\
                         `keyName` VARCHAR(255) NULL COMMENT '源于搜索关键字', \
                         `fullName` VARCHAR(255) NULL COMMENT '全称', \
                         `url` VARCHAR(255) NULL COMMENT '详情页面url',\
@@ -52,7 +52,7 @@ class DbOperatorTYC extends dbop {
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间'); ";
 
         var enterprise_detail = "CREATE TABLE IF NOT EXISTS `enterprise_detail`(\
-                        `id` int primary key COMMENT '公司（企业）代码，作为主键',\
+                        `id` bigint primary key COMMENT '公司（企业）代码，作为主键',\
                         `detailDesc` VARCHAR(8192) COMMENT 'Json格式的简明描述',\
                         `html` MEDIUMTEXT NULL COMMENT '详情页面内容', \
                         `recordTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '记录的时间',\
@@ -62,7 +62,8 @@ class DbOperatorTYC extends dbop {
                         `id` int auto_increment primary key COMMENT '自增长的键值',\
                         `searchKey` VARCHAR(45) NULL COMMENT '搜索关键字',\
                         `memo` VARCHAR(45) NULL COMMENT '备注',\
-                        `status` VARCHAR(45) NULL COMMENT '运行状态-running,not start,finished,terminal',\
+                        `status` VARCHAR(45) NULL COMMENT '运行状态-running,not start,finished,failed',\
+                        `description` VARCHAR(8192) NULL COMMENT '附加描述，包含出错信息',\
                         `pageCount` int NULL COMMENT '页面数',\
                         `searchStartTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索开始时间',\
                         `searchEndTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索结束时间');";
@@ -156,7 +157,7 @@ class DbOperatorTYC extends dbop {
         });
     }
 
-    updateSearchKeyStatus(keyid, status, callback) {
+    updateSearchKeyStatus(keyid, status, callback,desc,pagecount) {
         var self = this;
         if (!self.check()) {
             if (callback)
@@ -166,7 +167,9 @@ class DbOperatorTYC extends dbop {
         //error,finish,running
         var st = status == 'running' ? ',searchStartTime=NOW()' : '';
         var se = status != 'running' ? ',searchEndTime=NOW()' : '';
-        var q = printf("update search_keys set status = '%s'%s%s where id=%d;", status, st, se, keyid);
+        var de = desc != null?",description='"+desc+"'":'';
+        var pc = pagecount != null?",pageCount="+pagecount:'';
+        var q = printf("update search_keys set status = '%s'%s%s%s%s where id=%d;", status, st, se,de,pc,keyid);
         console.log(q);
         self.queues_.update_search.push(q);
         self.updateSearchKeyStatusBatch();
@@ -339,7 +342,7 @@ class DbOperatorTYC extends dbop {
     insertCompany(desc) {
         var self = this;
         var q = printf("(%d,'%s','%s','%s','%s',NOW())",
-            desc.company_id, desc.key, desc.company_name, desc.company_detail_url, JSON.stringify(desc), desc.company_id);
+            desc.brief.company_id, desc.key, desc.brief.company_name, desc.brief.company_detail_url, JSON.stringify(desc.brief));
         self.queues_.insert_com_breif.push(q);
         console.log('Mysql::insertCompany', 'cache->', self.queues_.insert_com_breif.length);
         self.insertCompanyBatch();//maybe run the batch.
@@ -347,13 +350,15 @@ class DbOperatorTYC extends dbop {
 
     insertCompanyBatch(force, callback) {
         if (!this.check()) {
+            if (callback)
+                callback({ succeed: false });
             return;
         }
         var self = this;
         var batch_func = function (limit) {
             if (limit <= 0) {
                 if (callback)
-                    callback();
+                    callback({ succeed: true });
                 return;
             }
             var sql = "insert into enterprise_base(id,keyName,fullName,url,briefDesc,recordTime) values";
@@ -365,12 +370,15 @@ class DbOperatorTYC extends dbop {
             }
             console.log(q);
             self.connection_.query(q, function (error, results, fields) {
+                log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
                 if (!!error) {
                     console.log(error.stack);
+                    if (callback)
+                        callback({ succeed: false, error: error });
+                } else {
+                    if (callback)
+                        callback({ succeed: true });
                 }
-                log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
-                if (callback)
-                    callback();
             });
         }
         if (true == force) {

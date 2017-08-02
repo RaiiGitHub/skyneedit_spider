@@ -48,6 +48,8 @@ class MethodStep1 extends explainer.MethodBase {
                     log._logR('Method::Step1', proxy.body_);
                 log._logR('Method::Step1', 'innder_index:', self.explainer_.emitter_.inner_index_, 'Time spent in requesting:', (new Date()).valueOf() - self.begin_time_);
                 fetcher.fetchPage(self, body, ue.key_, function (count) {
+                    //update.
+                    self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(ue.index_, 'running', null, null, count);//index as the searkey's id.
                     switch (count) {
                         case -1: {
                             log._logR('Method::Step1', 'Query denied in this proxy.');
@@ -285,31 +287,36 @@ class MethodStep3 extends explainer.MethodBase {
         log._logR('Method::Step3', 'urls:', up_to_verify.size());
         //verify datas.
         self.explainer_.emitter_.dboperator_.screenPendingInsertDatas(up_to_verify.container_, function () {
-            //insert and fill brief
+            //insert and fill briefsssss
             for (var d = 0; d < up_to_verify.size(); d++) {
                 var utv = up_to_verify.container_[d];
                 if (!utv.brief_exist) {
-                    self.explainer_.emitter_.dboperator_.insertCompany(
-                        { company_id: utv.id, key: utv.key, company_name: utv.name, company_detail_url: utv.ue.url_ }
-                    );
+                    self.explainer_.emitter_.dboperator_.insertCompany({brief:utv.brief,key:utv.key});
                 }
             }
-            self.explainer_.emitter_.dboperator_.insertCompanyBatch(true, function () {
-                //run the fetching of details.
-                self.detail_url_num_ = up_to_verify.size();
-                if (0 < up_to_verify.size()) {
-                    var tasks = [];
-                    for (var ue in up_to_verify.container_) {
-                        tasks.push(function (cb_sub) {
-                            self.sub(cb_sub, callback);
-                        });
-                    }
-                    async.waterfall(tasks, function (err, result) {
-                        //need to be done in the callback funcions.
-                    });
-                } else {
-                    log._logR('Method::Step3', 'No need to spidering detail datas.');
+            self.explainer_.emitter_.dboperator_.insertCompanyBatch(true, function (result) {
+                if (false == result.succeed) {
+                    var kid = self.explainer_.emitter_.urlentity_.index_;
+                    self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'failed', null, result.error.stack);//index as the searkey's id.
+                    log._logR('Method::Step3', 'key:', kid);
                     self.finish(callback);
+                } else {
+                    //run the fetching of details.
+                    self.detail_url_num_ = up_to_verify.size();
+                    if (0 < up_to_verify.size()) {
+                        var tasks = [];
+                        for (var ue in up_to_verify.container_) {
+                            tasks.push(function (cb_sub) {
+                                self.sub(cb_sub, callback);
+                            });
+                        }
+                        async.waterfall(tasks, function (err, result) {
+                            //need to be done in the callback funcions.
+                        });
+                    } else {
+                        log._logR('Method::Step3', 'No need to spidering detail datas.');
+                        self.finish(callback);
+                    }
                 }
             });
         });
