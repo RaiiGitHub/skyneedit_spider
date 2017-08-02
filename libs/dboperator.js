@@ -6,83 +6,20 @@ const log = require('./log');
 
 class DbOperator {
     constructor(host, user, psw, dbname) {
-        this.connection_ = null;
         this.host_ = host;
         this.user_ = user;
         this.psw_ = psw;
         this.dbname_ = dbname;
-    }
-    config() {
-        var connect_size = arguments[0] ? arguments[0] : 1;
-        if (!DbOperator.static_max_con_) {
-            DbOperator.static_max_con_ = 1;//max connection.
-            DbOperator.static_connections_ = [];
-        }
-        for (var i = 0; i < connect_size; i++) {
-            var cur_con_len_ = DbOperator.static_connections_.length;
-            if (cur_con_len_ < DbOperator.static_max_con_) {
-                DbOperator.static_connections_.push(mysql.createConnection({
-                    host: this.host_,
-                    user: this.user_,
-                    password: this.psw_,
-                    database: (this.dbname_ ? this.dbname_ : null)
-                }));
-                //connect right now!
-                this.connection_ = DbOperator.static_connections_[cur_con_len_];
-                this.connect(true);
-            } else {
-                var random_index = Math.floor(Math.random() * 10) % DbOperator.static_connections_.length;
-                this.connection_ = DbOperator.static_connections_[random_index];
-            }
-        }
-    }
-    check() {
-        if (DbOperator.static_connections_
-            && DbOperator.static_connections_.length > 1) {
-            var random_index = Math.floor(Math.random() * 10) % DbOperator.static_connections_.length;
-            this.connection_ = DbOperator.static_connections_[random_index];
-            //console.log('multi connection!', 'connect pool...');
-        }
-        if (null == this.connection_) {
-            log._logE('Mysql::ensureTablesExist', 'no connection');
-            return false;
-        }
-        return true;
-    }
-    connect(con) {
-        if (null == this.connection_)
-            return false;
-        var ok = true;
-        var message = '';
-        var self = this;
-        var func_result = function () {
-            if (true == ok) {
-                log._logR('SQL::', con ? 'Connect' : 'Disconnect', 'OK');
-                return true;
-            } else {
-                log._logR('SQL::', con ? 'Connect' : 'Disconnect', 'Error', message);
-                log._logE('SQL::', con ? 'Connect' : 'Disconnect', 'Error', message);
-                return false;
-            }
-            return true;
-        }
-        var func_con = function () {
-            con ? self.connection_.connect(function (err) {
-                if (err) {
-                    message = err.stack;
-                    ok = false;
-                }
-                return func_result();
-            }) : self.connection_.end(function (err) {
-                if (err) {
-                    message = err.stack;
-                    ok = false;
-                }
-                return func_result();
+        this.pool_ = mysql.createPool({
+                host: this.host_,
+                user: this.user_,
+                password: this.psw_,
+                database: this.dbname_,
+                port: 3306
             });
-            return true;
-        }
-        return func_con();
+    }
+    check(){
+        return !!this.pool_;
     }
 };
 module.exports = DbOperator;

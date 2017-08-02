@@ -45,8 +45,8 @@ if (cluster.isMaster) {
         for (; index <= (i + 1) * ave; ++index)
           keys.push(results[index]);
       }
-      log._logR('Main::Offset',index);
-      wp.send({keys:keys});
+      log._logR('Main::Offset', index);
+      wp.send({ keys: keys });
     }
   }, null, limit);
 
@@ -55,7 +55,6 @@ if (cluster.isMaster) {
   var proxy = new pv('proxycache_d');
   var concurrency_num = 0;
   log.processID = process.pid;
-  db.config();
   process.on('message', function (msg) {
     if (msg.keys) {
       concurrency_num++;
@@ -76,6 +75,7 @@ if (cluster.isMaster) {
         concurrency_num--;
         if (concurrency_num <= 0)
           e.ensureReleaseProxy();
+          db.connect(false);
       });
     }
   });

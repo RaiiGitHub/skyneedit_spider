@@ -24,7 +24,6 @@ if (cluster.isMaster) {
     log._logR('Main::EntryPoint', 'argument processnum and processconcurrency  should be here.');
     return;
   }
-
   var search_key_index_offset = 1;
   fs.readFile('./offset.txt', 'utf8', function (err, buf) {
     if (!err) {
@@ -65,7 +64,6 @@ if (cluster.isMaster) {
   var db = new dbop();
   var concurrency_num = 0;
   var concurrency_done = 0;
-  db.config();
   proxyvistor.initVisitor(function (limit) {
     log.processID = process.pid;
     if (limit) {
@@ -103,6 +101,7 @@ if (cluster.isMaster) {
               log._logR('Main::Failed', process.pid, 'Bye.');
               if (concurrency_done >= concurrency_num) {
                 e.ensureReleaseProxy();
+                db.connect(false);
                 process.send({ nomoredata: true });
               }
             } else {
@@ -114,6 +113,7 @@ if (cluster.isMaster) {
           log._logR('Main::NomoreData', process.pid);
           if (concurrency_done >= concurrency_num) {
             e.ensureReleaseProxy();
+            db.connect(false);
             process.send({ nomoredata: true });//no more datas.
           }
         }

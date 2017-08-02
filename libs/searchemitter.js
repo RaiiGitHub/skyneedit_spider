@@ -15,7 +15,6 @@ class SearchEmitter {
         var self = this;
         self.porxy_vistor_.useproxy_ = arguments[0] ? arguments[0] : false;//
         self.notify_done_ = arguments[1] ? arguments[1] : null;//
-        self.dboperator_.config();
         self.porxy_vistor_.initVisitor(function (result) {
             if (result && result.limit) {
                 //failed.
