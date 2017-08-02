@@ -330,7 +330,7 @@ class MethodStep3 extends explainer.MethodBase {
 class MethodStepFinal extends explainer.MethodBase {
     execute(callback) {
         log._logR('Method::Step::final', 'Mission done.');
-        self.finish(callback);
+        this.finish(callback);
     }
 };
 
