@@ -9,7 +9,6 @@ const log = require('./libs/log');
 const cluster = require('cluster');
 
 log.init('./datas/logs', 'NORMAL', 'Windows', 'TYCFetcher');
-
 if (cluster.isMaster) {
   var search_key_index = 1;
   process.on('SIGINT', function () {
@@ -64,8 +63,8 @@ if (cluster.isMaster) {
   var db = new dbop();
   var concurrency_num = 0;
   var concurrency_done = 0;
+  log.processID = process.pid;
   proxyvistor.initVisitor(function (limit) {
-    log.processID = process.pid;
     if (limit) {
       log._logR('Main::Limit', process.pid);
       process.send({ nomoredata: true });
@@ -83,7 +82,6 @@ if (cluster.isMaster) {
     else if (msg.offset) {
       var index = msg.index;
       log._logR('Main::Log', log.processID, 'concurrency:', index, '/', concurrency_num, 'Ready to log...');
-      db.begin();
       db.getSearchKeys(msg.offset, 1, function (results) {
         if (results) {
           var k = results[0].searchKey;

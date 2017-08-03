@@ -67,7 +67,7 @@ class Log {
         var txt = `[${now}]-${pid}-${type}: ${msg}${other} \r\n`;
         if (Log.basePath) {
             //log按照日期存储
-            let path = this.ensureFileSync("runtime");
+            let path = this.ensureFileSync("runtime"+pid);
             fs.outputFile(path, txt, {
                 flag: "a+"
             }, (err) => { });

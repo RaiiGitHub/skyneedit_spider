@@ -29,8 +29,8 @@ Date.prototype.format = function (fmt) {
 
 class DbOperatorTYC extends dbop {
     constructor() {
-        super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        //super('localhost', 'root', 'admin111', 'tianyancha');
+        //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
+        super('localhost', 'root', 'admin111', 'tianyancha');
         //super('localhost', 'root', 'mysql', 'tianyancha');
         //insert-cache-ops
         this.queues_ = { insert_com_breif: [], insert_com_page: [], update_search: [] };
@@ -86,15 +86,7 @@ class DbOperatorTYC extends dbop {
                         `pageCount` int NULL COMMENT '页面数',\
                         `searchStartTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索开始时间',\
                         `searchEndTime` timestamp NULL DEFAULT '0000-00-00 00:00:00' COMMENT '搜索结束时间');";
-        var mq = require('mysql-queries');
-        mq.init({
-            host: this.host_,
-            port: 3306,
-            user: this.user_,
-            password: this.psw_,
-            database: this.dbname_
-        })
-        mq.queries([enterprise_base, enterprise_detail, search_keys], [], function (err, result) {
+        this.queries([enterprise_base, enterprise_detail, search_keys], [], function (err, result) {
             if (!!err) {
                 console.log(err);
             } else {
@@ -118,24 +110,17 @@ class DbOperatorTYC extends dbop {
                 var km = skeys.splice(0, 1)[0];
                 self.verifySearchKeyExists(km.key, function (ok) {
                     if (!ok) {
-                        self.pool_.getConnection(function (err, conn) {
-                            if (!!err) {
-                                log._logR('Mysql::insertSeachKeys::error', err.stack);
+                        var q = printf("insert into search_keys(searchKey,memo,status) values('%s',%s,'%s')",
+                            km.key, km.memo, 'not start');
+                        self.query(q, null,function (error, results, fields) {
+                            if (error) {
+                                log._logE('Mysql::insertSeachKeys', 'exist,or unknown...', q);
+                                callback(false);
                             } else {
-                                var q = printf("insert into search_keys(searchKey,memo,status) values('%s',%s,'%s')",
-                                    km.key, km.memo, 'not start');
-                                conn.query(q, function (error, results, fields) {
-                                    conn.release();
-                                    if (error) {
-                                        log._logE('Mysql::insertSeachKeys', 'exist,or unknown...', q);
-                                        callback(false);
-                                    } else {
-                                        console.log(q);
-                                    }
-                                });
-                                cb(null);
+                                console.log(q);
                             }
                         });
+                        cb(null);
                     } else {
                         console.log(km.key, 'already exists...');
                         cb(null);
@@ -164,20 +149,13 @@ class DbOperatorTYC extends dbop {
 
     verifySearchKeyExists(key, callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::verifySearchKeyExists::error', err.stack);
+        var q = printf('select 1 from search_keys where searchKey = \'%s\' limit 1;', key);
+        self.query(q,null,function (error, results, fields) {
+            if (!error) {
+                callback(results.length == 1);
             } else {
-                var q = printf('select 1 from search_keys where searchKey = \'%s\' limit 1;', key);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results.length == 1);
-                    } else {
-                        log._logE('Mysql::verifySearchKeyExists', q, error.stack);
-                        callback(false);
-                    }
-                });
+                log._logE('Mysql::verifySearchKeyExists', q, error.stack);
+                callback(false);
             }
         });
     }
@@ -199,26 +177,15 @@ class DbOperatorTYC extends dbop {
     }
 
     updateSearchKeyStatusBatch(force) {
-        if (!this.check()) {
-            return;
-        }
         var self = this;
         var batch_func = function (limit) {
             if (limit <= 0)
                 return;
-            var mq = require('mysql-queries');
-            mq.init({
-                host: self.host_,
-                port: 3306,
-                user: self.user_,
-                password: self.psw_,
-                database: self.dbname_
-            })
             var sqls = [];
             for (var i = 0; i < limit; i++) {
                 sqls.push(self.queues_.update_search.splice(0, 1)[0]);
             }
-            mq.queries(sqls, [], function (err, result) {
+            self.queries(sqls, [], function (err, result) {
                 if (!!err) {
                     log._logE('Mysql::updateSearchKeyStatusBatch::Error', err.stack, JSON.stringify(sqls));
                 }
@@ -242,154 +209,98 @@ class DbOperatorTYC extends dbop {
 
     getSearchKeys(from, count, callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::getSearchKeys::error', err.stack);
-                callback(null);
+        var limit = count ? ('limit ' + count) : '';
+        var q = printf("SELECT id,searchKey FROM search_keys where id >= %d %s;", from, limit);
+        self.query(q, null,function (error, results, fields) {
+            if (!error && results.length > 0) {
+                callback(results);
             } else {
-                var limit = count ? ('limit ' + count) : '';
-                var q = printf("SELECT id,searchKey FROM search_keys where id >= %d %s;", from, limit);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error && results.length > 0) {
-                        callback(results);
-                    } else {
-                        console.log('Mysql::getSearchKeys', q, error);
-                        callback(null);
-                    }
-                });
+                console.log('Mysql::getSearchKeys', q, error);
+                callback(null);
             }
         });
     }
 
     getSearchCount(callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::getSearchCount::error', err.stack);
-                callback(null);
+        var q = printf("SELECT count(*) AS num FROM search_keys;");
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                callback(results[0].num);
             } else {
-                var q = printf("SELECT count(*) AS num FROM search_keys;");
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results[0].num);
-                    } else {
-                        log._logE('Mysql::getSearchCount', q, error.stack);
-                        callback(null);
-                    }
-                });
+                log._logE('Mysql::getSearchCount', q, error.stack);
+                callback(null);
             }
         });
     }
 
     getCompanyMaxID(callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::getCompanyMaxID::error', err.stack);
-                callback(null);
+        var q = printf("SELECT max(id) as id FROM enterprise_base;");
+        self.query(q, function (error, results, fields) {
+            if (!error) {
+                callback(results[0].id);
             } else {
-                var q = printf("SELECT max(id) as id FROM enterprise_base;");
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results[0].id);
-                    } else {
-                        log._logE('Mysql::getCompanyMaxID', q, error.stack);
-                        callback(null);
-                    }
-                });
+                log._logE('Mysql::getCompanyMaxID', q, error.stack);
+                callback(null);
             }
         });
     }
 
     getNoDetailPageUrls(callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::getNoDetailPageUrls::error', err.stack);
-                callback(null);
+        var limit = null != arguments[1] ? printf('limit %d;', arguments[1]) : '';
+        var condition = null != arguments[2] ? (arguments[2] + ' and') : '';
+        var q = printf("SELECT url,id FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT id FROM enterprise_detail) %s", condition, limit);
+        log._logR('Mysql::getNoDetailPageUrls', q);
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                callback(results);
             } else {
-                var limit = null != arguments[1] ? printf('limit %d;', arguments[1]) : '';
-                var condition = null != arguments[2] ? (arguments[2] + ' and') : '';
-                var q = printf("SELECT url,id FROM enterprise_base WHERE %s (urlValid is NULL or urlValid = 1) And id NOT IN(SELECT id FROM enterprise_detail) %s", condition, limit);
-                log._logR('Mysql::getNoDetailPageUrls', q);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results);
-                    } else {
-                        log._logE('Mysql::getNoDetailPageUrls', q, error.stack);
-                        callback(null);
-                    }
-                });
+                log._logE('Mysql::getNoDetailPageUrls', q, error.stack);
+                callback(null);
             }
         });
     }
 
     verifyCompanyExists(id, callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::verifyCompanyExists::error', err.stack);
-                callback(null);
+        var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                callback(results.length == 1);
             } else {
-                var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results.length == 1);
-                    } else {
-                        log._logE('Mysql::verifyCompanyExists', q, error.stack);
-                        callback(false);
-                    }
-                });
+                log._logE('Mysql::verifyCompanyExists', q, error.stack);
+                callback(false);
             }
         });
     }
 
     verifyCompanyPageExists(id, callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::verifyCompanyPageExists::error', err.stack);
-                callback(null);
+        var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                callback(results.length == 1);
             } else {
-                var q = printf('select 1 from enterprise_base where id = %d limit 1;', id);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        callback(results.length == 1);
-                    } else {
-                        log._logE('Mysql::verifyCompanyPageExists', q, error.stack);
-                        callback(false);
-                    }
-                });
+                log._logE('Mysql::verifyCompanyPageExists', q, error.stack);
+                callback(false);
             }
         });
     }
 
     updateCompanyUrlVerified(id, valid, callback) {
         var self = this;
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::updateCompanyUrlVerified::error', err.stack);
-                callback(null);
+        //valid can be null.
+        var q = printf("UPDATE enterprise_base SET urlValid = %s WHERE id = %d;", !!valid ? 'NULL' : valid, id);
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                if (callback)
+                    callback(true);
             } else {
-                //valid can be null.
-                var q = printf("UPDATE enterprise_base SET urlValid = %s WHERE id = %d;", !!valid ? 'NULL' : valid, id);
-                conn.query(q, function (error, results, fields) {
-                    conn.release();
-                    if (!error) {
-                        if (callback)
-                            callback(true);
-                    } else {
-                        log._logE('Mysql::updateCompanyUrlVerified', q, error.stack);
-                        if (callback)
-                            callback(false);
-                    }
-                });
+                log._logE('Mysql::updateCompanyUrlVerified', q, error.stack);
+                if (callback)
+                    callback(false);
             }
         });
     }
@@ -405,11 +316,6 @@ class DbOperatorTYC extends dbop {
     }
 
     insertCompanyBatch(force, callback) {
-        if (!this.check()) {
-            if (callback)
-                callback({ succeed: false });
-            return;
-        }
         var self = this;
         var batch_func = function (limit) {
             if (limit <= 0) {
@@ -425,25 +331,16 @@ class DbOperatorTYC extends dbop {
                 q += (i == limit - 1) ? ';' : ',';
             }
             log._logR('Mysql::insertCompanyBatch', q);
-            self.pool_.getConnection(function (err, conn) {
-                if (!!err) {
-                    log._logR('Mysql::insertCompanyBatch::error', err.stack);
+            self.query(q, null,function (error, results, fields) {
+                log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
+                if (!!error) {
+                    console.log(error.stack);
+                    log._logR('Mysql::insertCompanyBatch::Error', error.stack);
                     if (callback)
-                        callback(false);
+                        callback({ succeed: false, error: error });
                 } else {
-                    conn.query(q, function (error, results, fields) {
-                        conn.release();
-                        log._logR('Mysql::insertCompanyBatch', 'Completed with', limit, 'jobs...');
-                        if (!!error) {
-                            console.log(error.stack);
-                            log._logR('Mysql::insertCompanyBatch::Error', error.stack);
-                            if (callback)
-                                callback({ succeed: false, error: error });
-                        } else {
-                            if (callback)
-                                callback({ succeed: true });
-                        }
-                    });
+                    if (callback)
+                        callback({ succeed: true });
                 }
             });
         }
@@ -471,9 +368,6 @@ class DbOperatorTYC extends dbop {
     }
 
     insertCompanyPageBatch(force, callback) {
-        if (!this.check()) {
-            return;
-        }
         var self = this;
         var batch_func = function (limit) {
             if (limit <= 0)
@@ -487,22 +381,13 @@ class DbOperatorTYC extends dbop {
                 htmls.push([item.html]);
             }
             console.log(q);
-            self.pool_.getConnection(function (err, conn) {
-                if (!!err) {
-                    log._logR('Mysql::insertCompanyPageBatch::error', err.stack);
-                    if (callback)
-                        callback(false);
-                } else {
-                    conn.query(q, htmls, function (error, results, fields) {
-                        conn.release();
-                        if (!!error) {
-                            console.log(error.stack);
-                        }
-                        log._logR('Mysql::insertCompanyPageBatch', 'Completed with', limit, 'jobs...');
-                        if (callback) {
-                            callback();
-                        }
-                    });
+            self.query(q, htmls, function (error, results, fields) {
+                if (!!error) {
+                    console.log(error.stack);
+                }
+                log._logR('Mysql::insertCompanyPageBatch', 'Completed with', limit, 'jobs...');
+                if (callback) {
+                    callback();
                 }
             });
         }
@@ -541,7 +426,7 @@ class DbOperatorTYC extends dbop {
 
     screenPendingInsertDatas(datas, callback) {
         //building searching-conditions.
-        if (0 == datas.length || !this.check()) {
+        if (0 == datas.length ) {
             if (callback)
                 callback(false);//no datas.
             return;
@@ -581,39 +466,30 @@ class DbOperatorTYC extends dbop {
         // }
 
         //check whether exist in db already.
-        self.pool_.getConnection(function (err, conn) {
-            if (!!err) {
-                log._logR('Mysql::insertCompanyPageBatch::error', err.stack);
-                callback(null);
-            } else {
-                conn.query(search_brief, function (error, results, fields) {
+        self.query(search_brief, null,function (error, results, fields) {
+            if (!error) {
+                //fill datas.
+                for (var r in results) {
+                    func_mv(results[r].id, true);
+                }
+                //next
+                self.query(search_detail, null,function (error, results, fields) {
                     if (!error) {
-                        //fill datas.
                         for (var r in results) {
-                            func_mv(results[r].id, true);
+                            func_mv(results[r].id, false);
                         }
-                        //next
-                        conn.query(search_detail, function (error, results, fields) {
-                            conn.release();
-                            if (!error) {
-                                for (var r in results) {
-                                    func_mv(results[r].id, false);
-                                }
-                                if (callback)
-                                    callback(true);
-                            } else {
-                                log._logR('Mysql::screenPendingInsertDatas', search_detail, error.stack);
-                                if (callback)
-                                    callback(false);
-                            }
-                        });
+                        if (callback)
+                            callback(true);
                     } else {
-                        conn.release();
-                        log._logR('Mysql::screenPendingInsertDatas', search_brief, error.stack);
+                        log._logR('Mysql::screenPendingInsertDatas', search_detail, error.stack);
                         if (callback)
                             callback(false);
                     }
                 });
+            } else {
+                log._logR('Mysql::screenPendingInsertDatas', search_brief, error.stack);
+                if (callback)
+                    callback(false);
             }
         });
     }

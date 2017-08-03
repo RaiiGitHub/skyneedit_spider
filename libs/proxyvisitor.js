@@ -56,15 +56,15 @@ class ProxyVisitor {
                         console.log('Proxy', 'No IP Resources in the proxy pool,try to reget again...');
                         self.request_try_limit_++;
                         if (self.request_try_limit_ > 5000) {
-                            log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignore.');
+                            log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignored.');
                             if (callback)
                                 callback({ limit: true });
                             return;
                         }
-                        self.initVisitor(function () {
-                            if (callback)
-                                callback();
-                        });
+                        //delay time of 1s.
+                        setTimeout(function () {
+                            self.initVisitor(callback);
+                        }, 1 * 1000);
                         return;
                     }
                     var proxyip = b.data.proxyip;
@@ -85,7 +85,10 @@ class ProxyVisitor {
                     if (callback)
                         callback();
                 } else {
-                    log._logR('Proxy', 'initVisitor Failed:', self);
+                    log._logR('Proxy', 'initVisitor Failed:', JSON.stringify(error), JSON.stringify(response), 'Retry after 60s.');
+                    setTimeout(function () {
+                        self.initVisitor(callback);
+                    }, 60 * 1000);
                 }
             });
         }
@@ -109,10 +112,7 @@ class ProxyVisitor {
         }
         ProxyVisitor.static_request_ = null;
         self.releaseVisitor(visitor, function () {
-            self.initVisitor(function () {
-                if (callback)
-                    callback();
-            });
+            self.initVisitor(callback);
         });
         return true;
     }
@@ -197,9 +197,7 @@ class ProxyVisitor {
         });
         if (callback) {
             log._logR('Proxy', 'will exit after 5s.');
-            setTimeout(function () {
-                callback();
-            }, 5 * 1000);
+            setTimeout(callback, 5 * 1000);
         }
     }
 

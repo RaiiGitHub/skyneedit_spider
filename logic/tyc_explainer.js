@@ -35,7 +35,7 @@ class MethodStep1 extends explainer.MethodBase {
             if (!proxy.refreshVisitor(null, function () {
                 self.execute(callback);//redo again.
             })) {
-                self.finish(callback);
+                log._logR('Method::Step1','UnknownError','Hang up...');
             }
         }
         request(options, function (err, res, body) {
@@ -141,7 +141,7 @@ class MethodStep2 extends explainer.MethodBase {
                 log._logR('Method::Step2', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
-                handlefunc();
+                log._logR('Method::Step2','UnknownError','Hang up...');
             }
         }
         request(options, function (err, res, body) {
@@ -237,7 +237,7 @@ class MethodStep3 extends explainer.MethodBase {
                 log._logR('Method::Step3', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
-                handlefunc();
+                log._logR('Method::Step3','UnknownError','Hang up...');
             }
         }
         if (ue.detail_exist) {

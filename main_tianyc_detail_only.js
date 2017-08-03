@@ -29,7 +29,6 @@ if (cluster.isMaster) {
   var ws = parseInt(process_args[0]);
   var limit = 2 <= process_args.length ? parseInt(process_args[1]) : null;
   var db = new dbop();
-  db.config();
   db.getNoDetailPageUrls(function (results) {
     var ave = parseInt(results.length / ws);
     var index = 0;
