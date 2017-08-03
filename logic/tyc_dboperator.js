@@ -308,7 +308,7 @@ class DbOperatorTYC extends dbop {
     insertCompany(desc) {
         var self = this;
         var q = printf("(%d,'%s','%s','%s','%s',NOW())",
-            desc.brief.company_id, desc.key, desc.brief.company_name, desc.brief.company_detail_url, JSON.stringify(desc.brief));
+            desc.brief.company_id, desc.key, desc.brief.company_name, desc.brief.company_detail_url, JSON.stringify(desc.brief).replace(/'/g,"''"));
         self.queues_.insert_com_breif.push(q);
         //self.id_history_.id_com_breif.push(desc.brief.company_id);
         console.log('Mysql::insertCompany', 'cache->', self.queues_.insert_com_breif.length);
