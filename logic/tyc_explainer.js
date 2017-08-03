@@ -35,7 +35,7 @@ class MethodStep1 extends explainer.MethodBase {
             if (!proxy.refreshVisitor(null, function () {
                 self.execute(callback);//redo again.
             })) {
-                log._logR('Method::Step1','UnknownError','Hang up...');
+                log._logR('Method::Step1', 'UnknownError', 'Hang up...');
             }
         }
         request(options, function (err, res, body) {
@@ -141,7 +141,7 @@ class MethodStep2 extends explainer.MethodBase {
                 log._logR('Method::Step2', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
-                log._logR('Method::Step2','UnknownError','Hang up...');
+                log._logR('Method::Step2', 'UnknownError', 'Hang up...');
             }
         }
         request(options, function (err, res, body) {
@@ -218,10 +218,7 @@ class MethodStep3 extends explainer.MethodBase {
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
                 //forcely run batch of inserting company-details.
-                var kid = self.explainer_.emitter_.urlentity_.index_;
                 self.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
-                self.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'finished');//index as the searkey's id.
-                self.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
@@ -237,7 +234,7 @@ class MethodStep3 extends explainer.MethodBase {
                 log._logR('Method::Step3', 'Proxy Need to be Refreshed.', !limit ? 'Succeeded.' : 'Failed.');
                 self.sub(callback, cb_parent);//redo again.
             })) {
-                log._logR('Method::Step3','UnknownError','Hang up...');
+                log._logR('Method::Step3', 'UnknownError', 'Hang up...');
             }
         }
         if (ue.detail_exist) {
@@ -338,6 +335,9 @@ class MethodStep3 extends explainer.MethodBase {
 class MethodStepFinal extends explainer.MethodBase {
     execute(callback) {
         log._logR('Method::Step::final', 'Mission done.');
+        var kid = this.explainer_.emitter_.urlentity_.index_;
+        this.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'finished');//index as the searkey's id.
+        this.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
         this.finish(callback);
     }
 };

@@ -66,10 +66,10 @@ if (cluster.isMaster) {
   log.processID = process.pid;
   proxyvistor.initVisitor(function (limit) {
     if (limit) {
-      log._logR('Main::Limit', process.pid);
+      log._logR('Main::Limit',process.pid);
       process.send({ nomoredata: true });
     }else{
-      log._logR('Main::Ready', process.pid);
+      log._logR('Main::Ready',process.pid);
       process.send({ ready: true });
     }
   });
@@ -80,8 +80,8 @@ if (cluster.isMaster) {
         concurrency_num = msg.concurrency;
     }
     else if (msg.offset) {
-      var index = msg.index;
-      log._logR('Main::Log', log.processID, 'concurrency:', index, '/', concurrency_num, 'Ready to log...');
+      var index = printf('%d.%d',msg.index,msg.offset);
+      log._logR('Main::Log', log.processID, 'concurrency.offset:', index, '/', concurrency_num,'Ready to log...');
       db.getSearchKeys(msg.offset, 1, function (results) {
         if (results) {
           var k = results[0].searchKey;

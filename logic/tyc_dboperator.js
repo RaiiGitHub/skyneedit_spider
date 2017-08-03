@@ -29,8 +29,8 @@ Date.prototype.format = function (fmt) {
 
 class DbOperatorTYC extends dbop {
     constructor() {
-        //super('192.168.6.184', 'root', 'admin111', 'tianyancha');
-        super('localhost', 'root', 'admin111', 'tianyancha');
+        super('192.168.6.184', 'root', 'admin111', 'tianyancha');
+        //super('localhost', 'root', 'admin111', 'tianyancha');
         //super('localhost', 'root', 'mysql', 'tianyancha');
         //insert-cache-ops
         this.queues_ = { insert_com_breif: [], insert_com_page: [], update_search: [] };
