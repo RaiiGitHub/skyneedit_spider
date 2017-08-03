@@ -1,6 +1,6 @@
 #/bin/bash
 echo "will run the fetching program(tianyc.node.js)..."
-cd /data/tianyc
+cd /home/work/tianyc
 #!/bin/sh
 PROCESSLIMIT=$1
 IPLIMIT=$2

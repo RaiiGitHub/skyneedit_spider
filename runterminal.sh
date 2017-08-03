@@ -1,6 +1,6 @@
 #/bin/bash
 echo "will terminal the fetching program(tianyc.node.js)..."
-cd /data/tianyc
+cd /home/work/tianyc
 #!/bin/sh
 TYC=`ps -fe|grep main_tianyc |grep -v grep|wc -l|awk '{print $1}'`
 echo $TYC
