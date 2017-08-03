@@ -1,6 +1,6 @@
 #/bin/bash
 echo "will run the fetching program(tianyc.lostdetail.node.js)..."
-cd /home/work/tianyc
+cd /data/tianyc
 #!/bin/sh
 PROCESSLIMIT=$1
 TYC=`ps -fe|grep main_tianyc_detail_only |grep -v grep|wc -l|awk '{print $1}'`
