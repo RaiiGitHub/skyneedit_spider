@@ -29,27 +29,31 @@ if (cluster.isMaster) {
   }
   var ws = parseInt(process_args[0]);
   var db = new dbop();
-  db.getUnfinishedSearchKeys(function (results) {
-    var ave = parseInt(results.length / ws);
-    var index = 0;
-    log._logR('Main::Assign', ws, '*', ave);
-    for (var i = 0; i < ws; i++) {
-      var wp = cluster.fork();//work process.
-      var keys = [];
-      if (i == ws - 1) {
-        for (; index < results.length; ++index) {
-          keys.push(results[index]);
+  db.resetAbnormalSearchKey(function (ok) {
+    if (true == ok) {
+      db.getUnfinishedSearchKeys(function (results) {
+        var ave = parseInt(results.length / ws);
+        var index = 0;
+        log._logR('Main::Assign', ws, '*', ave);
+        for (var i = 0; i < ws; i++) {
+          var wp = cluster.fork();//work process.
+          var keys = [];
+          if (i == ws - 1) {
+            for (; index < results.length; ++index) {
+              keys.push(results[index]);
+            }
+          } else {
+            for (; index <= (i + 1) * ave; ++index)
+              keys.push(results[index]);
+          }
+          log._logR('Main::Offset', index);
+          log._logR('Main::Keys', JSON.stringify(keys));
+          wp.send({ keys: keys });
         }
-      } else {
-        for (; index <= (i + 1) * ave; ++index)
-          keys.push(results[index]);
-      }
-      log._logR('Main::Offset', index);
-      log._logR('Main::Keys',JSON.stringify(keys));
-      wp.send({ keys: keys });
+        db.end();
+      });
     }
-    db.end();
-  });
+  })
 } else {
   var proxyvistor = new pv;
   var db = new dbop();
@@ -90,13 +94,13 @@ if (cluster.isMaster) {
           //go
           var tasks = [];
           keys = msg.keys;
-          for( var k in keys){
-            tasks.push(function(callback){
+          for (var k in keys) {
+            tasks.push(function (callback) {
               main(callback);
             })
           }
-          async.waterfall(tasks,function(){
-             log._logR('Main::Done', process.pid);
+          async.waterfall(tasks, function () {
+            log._logR('Main::Done', process.pid);
           });
         }
       });

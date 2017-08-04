@@ -221,6 +221,18 @@ class DbOperatorTYC extends dbop {
         });
     }
 
+    resetAbnormalSearchKey(callback){
+        var self = this;
+        var q = printf("UPDATE search_keys SET status = 'running',description=NULL WHERE pageCount = 0;");
+        self.query(q, null,function (error, results, fields) {
+            if (!error) {
+                callback(true);
+            } else {
+                console.log('Mysql::resetAbnormalSearchKey', q, error);
+                callback(false);
+            }
+        });
+    }
     getUnfinishedSearchKeys(callback){
         var self = this;
         var q = printf("SELECT id,searchKey FROM search_keys WHERE status != 'finished' and status is not null;");
