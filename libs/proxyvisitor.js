@@ -144,7 +144,7 @@ class ProxyVisitor {
             return;
         }
         self.refreshing_ = true;
-        ProxyVisitor.releaseProxy(self, function (b) {
+        ProxyVisitor.releaseProxy(self.body_, function (b) {
             self.body_ = null;
             self.refreshing_ = false;
             //delete proxy cache file
@@ -182,6 +182,7 @@ class ProxyVisitor {
         //读取文件目录
         var cn = name ? name : 'proxycache';
         var proxy_cache_path = './datas/' + cn + '/';
+        console.log(proxy_cache_path);
         fs.readdir(proxy_cache_path, function (err, files) {
             if (err) {
                 console.log(err);

@@ -221,6 +221,19 @@ class DbOperatorTYC extends dbop {
         });
     }
 
+    getUnfinishedSearchKeys(callback){
+        var self = this;
+        var q = printf("SELECT id,searchKey FROM search_keys WHERE status != 'finished' and status is not null;");
+        self.query(q, null,function (error, results, fields) {
+            if (!error && results.length > 0) {
+                callback(results);
+            } else {
+                console.log('Mysql::getUnfinishedSearchKeys', q, error);
+                callback(null);
+            }
+        });
+    }
+
     getSearchCount(callback) {
         var self = this;
         var q = printf("SELECT count(*) AS num FROM search_keys;");

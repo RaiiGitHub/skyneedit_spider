@@ -26,7 +26,7 @@ class DbOperator {
     end(){
         if( !this.is_connected_ )
             return;
-        self.connection_.end();
+        this.connection_.end();
         this.is_connected_ = false;
     }
     query(sql, args, callback) {
