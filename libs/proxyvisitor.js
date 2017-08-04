@@ -57,6 +57,7 @@ class ProxyVisitor {
                         self.request_try_limit_++;
                         if (self.request_try_limit_ > 5000) {
                             log._logR('Proxy', 'No IP Resources and had tried many times,this will be ignored.');
+                            log._logE('Proxy', 'No IP Resources and had tried many times,this will be ignored.');
                             if (callback)
                                 callback({ limit: true });
                             return;
@@ -86,9 +87,10 @@ class ProxyVisitor {
                         callback();
                 } else {
                     log._logR('Proxy', 'initVisitor Failed:', JSON.stringify(error), JSON.stringify(response), 'Retry after 60s.');
+                    log._logE('Proxy', 'initVisitor Failed:', JSON.stringify(error), JSON.stringify(response), 'Retry after 60s.');
                     setTimeout(function () {
                         self.initVisitor(callback);
-                    }, 60 * 1000);
+                    }, 30 * 1000);
                 }
             });
         }
@@ -142,7 +144,7 @@ class ProxyVisitor {
             return;
         }
         self.refreshing_ = true;
-        ProxyVisitor.releaseProxy(self.body_, function (b) {
+        ProxyVisitor.releaseProxy(self, function (b) {
             self.body_ = null;
             self.refreshing_ = false;
             //delete proxy cache file
@@ -162,9 +164,12 @@ class ProxyVisitor {
             body: body
         };
         request(options, function (e, r, b) {
-            if (e) {
+            if (!!e) {
                 log._logR('Proxy-Error', 'upload failed:', e);
                 log._logE('Proxy-Error', 'upload failed:', e);
+                setTimeout(function() {
+                    ProxyVisitor.releaseProxy(body,callback);//release again...
+                }, 30*1000);
                 return;
             }
             log._logR('Proxy', 'proxy released...', b, body);
