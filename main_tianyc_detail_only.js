@@ -32,6 +32,7 @@ if (cluster.isMaster) {
   db.getNoDetailPageUrls(function (results) {
     var ave = parseInt(results.length / ws);
     var index = 0;
+    db.end();
     log._logR('Main::Assign', ws, '*', ave);
     for (var i = 0; i < ws; i++) {
       var wp = cluster.fork();//work process.
@@ -47,7 +48,7 @@ if (cluster.isMaster) {
       log._logR('Main::Offset', index);
       wp.send({ keys: keys });
     }
-  }, null, limit);
+  }, limit);
 
 } else {
   var db = new dbop;
@@ -64,7 +65,6 @@ if (cluster.isMaster) {
         new explainer(msg.keys),
         new urlentity('', 1, '')//get fetching urls from db.
       );
-      db.begin();
       e.emit(true, function (failed) {
         db.end();
         if (failed) {
