@@ -14,6 +14,7 @@ then
         kill -9 $i
     done
     echo "clean proxy....."
+    node main_log_fetch.js
     node main_releaseproxy.js
 fi
 echo "main_tianyc.js terminaled..."

@@ -344,6 +344,10 @@ class MethodStepFinal extends explainer.MethodBase {
 class ExplainerTYC extends explainer.ExplainerBase {
     setupMethod(emitter) {
         super.setupMethod(emitter);
+        process.on('uncaughtException', function (err) {
+            log._logE('Process::uncaughtException', err.stack);
+            log._logR('Process::uncaughtException', err.stack);
+        });
         this.memo_ = 'explainer of tian yan cha.';
         this.methods_ = [
             new MethodStep1('step1', this),
