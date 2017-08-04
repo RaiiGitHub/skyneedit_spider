@@ -217,8 +217,6 @@ class MethodStep3 extends explainer.MethodBase {
             up.stamp();
             if (up.empty()) {
                 log._logR('Method::Step3', 'No more detail urls...');
-                //forcely run batch of inserting company-details.
-                self.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
                 self.finish(cb_parent);//notify parent.
                 callback(null);
             } else {
@@ -338,6 +336,7 @@ class MethodStepFinal extends explainer.MethodBase {
         var kid = this.explainer_.emitter_.urlentity_.index_;
         this.explainer_.emitter_.dboperator_.updateSearchKeyStatus(kid, 'finished');//index as the searkey's id.
         this.explainer_.emitter_.dboperator_.updateSearchKeyStatusBatch(true);
+        this.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
         this.finish(callback);
     }
 };

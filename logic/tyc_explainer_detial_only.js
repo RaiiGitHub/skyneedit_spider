@@ -131,6 +131,7 @@ class MethodStep2 extends explainer.MethodBase {
 class MethodStepFinal extends explainer.MethodBase {
     execute(callback) {
         console.log('Method::Step::final', 'Mission done.');
+        this.explainer_.emitter_.dboperator_.insertCompanyPageBatch(true);
         this.finish(callback);
     }
 };
