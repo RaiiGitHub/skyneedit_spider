@@ -45,7 +45,6 @@ if (cluster.isMaster) {
             }
           } else if (msg.ready) {
             for (var index = 1; index <= process_concurrency; index++) {
-              console.log(index);
               wp_.send({ begin: true, index: index, concurrency: process_concurrency });
             }
           } else if (msg.next) {

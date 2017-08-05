@@ -12,6 +12,7 @@ class SearchEmitter {
     }
 
     emit() {
+        console.log('emit begin...');
         var self = this;
         self.porxy_vistor_.useproxy_ = arguments[0] ? arguments[0] : false;//
         self.notify_done_ = arguments[1] ? arguments[1] : null;//

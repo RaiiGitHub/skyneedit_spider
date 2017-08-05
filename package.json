@@ -9,14 +9,19 @@
   "dependencies": {
     "async": "^2.5.0",
     "cheerio": "^1.0.0-rc.2",
+    "describe": "^1.2.0",
     "fs": "0.0.1-security",
     "fs-extra": "^4.0.0",
     "ip": "^1.1.5",
     "line-reader": "^0.4.0",
+    "lock": "^0.1.4",
     "mysql": "^2.14.0",
     "mysql-queries": "^0.2.0",
+    "node-semaphore": "0.0.2",
     "printf": "^0.2.5",
     "request": "^2.81.0",
+    "should": "^11.2.1",
+    "tape": "^4.8.0",
     "underscore": "^1.8.3",
     "urlencode": "^1.1.0"
   }
