@@ -183,7 +183,7 @@ class MethodStep2 extends explainer.MethodBase {
         log._logR('Method::Step1', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
         var up = this.pre_.user_data_;
         if (null == up) {
-            log._logR('Method::Step2', self.explainer_.emitter_.inner_index_, 'visit denined.');
+            log._logR('Method::Step2', self.explainer_.emitter_.inner_index_, 'No datas in previous step.');
             callback(null);
             return;
         }
@@ -288,7 +288,7 @@ class MethodStep3 extends explainer.MethodBase {
         log._logR('Method::Step2', self.explainer_.emitter_.inner_index_, 'Time spent:', this.begin_time_ - this.pre_.begin_time_);
         var up_to_verify = self.pre_.user_data_;
         if (null == up_to_verify) {
-            log._logR('Method::Step3', self.explainer_.emitter_.inner_index_, 'visit denined.');
+            log._logR('Method::Step3', self.explainer_.emitter_.inner_index_, 'No datas in previous step.');
             self.finish(callback);
             return;
         }
@@ -347,19 +347,28 @@ class MethodStepFinal extends explainer.MethodBase {
 
 class ExplainerTYC extends explainer.ExplainerBase {
     setupMethod(emitter) {
+        var self = this;
         super.setupMethod(emitter);
         process.on('uncaughtException', function (err) {
             log._logE('Process::uncaughtException', err.stack);
             log._logR('Process::uncaughtException', err.stack);
+            log._logR('Process::emit', 'try to emit again!');
+            //so let's redo again.
+            for(var i in self.methods_ ){
+                self.methods_[i].clear();
+            }
+            process.nextTick(function(){
+                emitter.emit(true,emitter.notify_done_);
+            })
         });
-        this.memo_ = 'explainer of tian yan cha.';
-        this.methods_ = [
-            new MethodStep1('step1', this),
-            new MethodStep2('step2', this),
-            new MethodStep3('step3', this),
-            new MethodStepFinal('final', this),
+        self.memo_ = 'explainer of tian yan cha.';
+        self.methods_ = [
+            new MethodStep1('step1', self),
+            new MethodStep2('step2', self),
+            new MethodStep3('step3', self),
+            new MethodStepFinal('final', self),
         ];
-        this.buildMethodDoubleLink();
+        self.buildMethodDoubleLink();
     }
 };
 

@@ -33,7 +33,7 @@ class ProxyVisitor {
             return;
         }
         lock('proxy', function (release) {
-            log._logR('Proxy', '[locked]', 'ready to visit...');
+            log._logR('Proxy', 'locked', 'ready to visit...');
             if (self.request_) {//using last request.
                 process.nextTick(
                     release(function () {

@@ -28,10 +28,11 @@ if (cluster.isMaster) {
     return;
   }
   var ws = parseInt(process_args[0]);
+  var reset_abnormal = process_args.length > 1 ? (1 == process_args[1]) : false;
   var db = new dbop();
-  db.resetAbnormalSearchKey(function (ok) {
-    if (true == ok) {
-      db.getUnfinishedSearchKeys(function (results) {
+  var main = function () {
+    db.getUnfinishedSearchKeys(function (results) {
+      if (results) {
         var ave = parseInt(results.length / ws);
         var index = 0;
         log._logR('Main::Assign', ws, '*', ave);
@@ -50,10 +51,21 @@ if (cluster.isMaster) {
           log._logR('Main::Keys', JSON.stringify(keys));
           wp.send({ keys: keys });
         }
-        db.end();
-      });
-    }
-  })
+      }else{
+        log._logR('Main::Assign', 'No Unfinished datas.');
+      }
+      db.end();
+    });
+  }
+  if (reset_abnormal) {
+    db.resetAbnormalSearchKey(function (ok) {
+      if (true == ok) {
+        main();
+      }
+    });
+  } else {
+    main();
+  }
 } else {
   var proxyvistor = new pv;
   var db = new dbop();
@@ -100,7 +112,7 @@ if (cluster.isMaster) {
             })
           }
           async.waterfall(tasks, function () {
-            log._logR('Main::Done', process.pid);
+            log._logR('Main::All Async mission Done.', process.pid);
           });
         }
       });

@@ -32,6 +32,11 @@ class MethodBase{
         //callback is a async function object.
         callback(null);
     }
+    clear(){
+        this.user_data_ = null;//to store the user data.
+        this.begin_time_ = 0;//task begin time.
+        this.sub_task_begin_time_ = 0;//sub task begin time.
+    }
 };
 
 class ExplainerBase{
