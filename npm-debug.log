@@ -1,0 +1,21 @@
+1564 verbose stack Error: kill ENOSYS
+1564 verbose stack     at exports._errnoException (util.js:1018:11)
+1564 verbose stack     at process.kill (internal/process.js:190:13)
+1564 verbose stack     at process.listener (D:\Program Files\nodejs\node_modules\npm\node_modules\npmlog\node_modules\gauge\node_modules\signal-exit\index.js:86:15)
+1564 verbose stack     at emitNone (events.js:91:20)
+1564 verbose stack     at process.emit (events.js:185:7)
+1564 verbose stack     at processEmit (D:\Program Files\nodejs\node_modules\npm\node_modules\npmlog\node_modules\gauge\node_modules\signal-exit\index.js:146:32)
+1564 verbose stack     at processEmit (D:\Program Files\nodejs\node_modules\npm\node_modules\npm-registry-client\node_modules\npmlog\node_modules\gauge\node_modules\signal-exit\index.js:146:32)
+1564 verbose stack     at Signal.wrap.onsignal (internal/process.js:217:44)
+1565 verbose cwd D:\workspace\node_js_project
+1566 error Windows_NT 10.0.15063
+1567 error argv "D:\\Program Files\\nodejs\\node.exe" "D:\\Program Files\\nodejs\\node_modules\\npm\\bin\\npm-cli.js" "install" "socket.io"
+1568 error node v6.11.0
+1569 error npm  v3.10.10
+1570 error code ENOSYS
+1571 error errno ENOSYS
+1572 error syscall kill
+1573 error kill ENOSYS
+1574 error If you need help, you may report this error at:
+1574 error     <https://github.com/npm/npm/issues>
+1575 verbose exit [ 1, true ]

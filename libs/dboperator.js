@@ -1,21 +1,40 @@
 "use strict";
 const mysql = require('mysql');
 const async = require('async');
+const socket = require('./socket');
 
 class DbOperator {
-    constructor(host, user, psw, dbname) {
-        this.host_ = host;
-        this.user_ = user;
-        this.psw_ = psw;
-        this.dbname_ = dbname;
-        this.is_connected_ = false;
-        this.connection_ = mysql.createConnection({
-            host: this.host_,
+    constructor(host, user, psw, dbname, is_holder) {
+        var self = this;
+        self.host_ = host;
+        self.user_ = user;
+        self.psw_ = psw;
+        self.dbname_ = dbname;
+        self.is_connected_ = false;
+        self.connection_ = mysql.createConnection({
+            host: host,
             port: 3306,
-            user: this.user_,
-            password: this.psw_,
-            database: this.dbname_
+            user: user,
+            password: psw,
+            database: dbname
         });
+        self.is_holder_ = is_holder;
+        // if (true == is_holder) {
+        //     self.connection_ = mysql.createConnection({
+        //         host: host,
+        //         port: 3306,
+        //         user: user,
+        //         password: psw,
+        //         database: dbname
+        //     });
+        //     self.socket_server_ = new socket.SocketServer(8194);
+        //     self.socket_server_.injectEvent('query',function(client,sql,args){
+        //         self._query(sql,args,function(e,r,f){
+        //             //now should echo to the client.
+        //             client.emit('query',[e,r,f]);
+        //         });
+        //     });
+        // }
     }
     connect() {
         if (this.is_connected_)
@@ -23,8 +42,8 @@ class DbOperator {
         this.connection_.connect();
         this.is_connected_ = true;
     }
-    end(){
-        if( !this.is_connected_ )
+    end() {
+        if (!this.is_connected_)
             return;
         this.connection_.end();
         this.is_connected_ = false;
@@ -73,7 +92,7 @@ class DbOperator {
                         };
                     };
                 for (var i = 0; i < sqls.length; i++) {
-                    arr[arr.length] = func( i, sqls, args, opt);
+                    arr[arr.length] = func(i, sqls, args, opt);
                 }
                 async.series(arr, function (err, results) {
                     if (!!err) {

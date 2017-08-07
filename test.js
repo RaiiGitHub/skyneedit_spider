@@ -12,12 +12,12 @@
 //          //pool.release();
 //     });
 // }
-var tape = require('tape')
-var should = require('should');
-var lock = require('lock')();
-function test(what) {
-    console.log('test...',what);
-}
+// var tape = require('tape')
+// var should = require('should');
+// var lock = require('lock')();
+// function test(what) {
+//     console.log('test...',what);
+// }
 
 // //tape('lock with optional done', function (t) {
 
@@ -51,16 +51,45 @@ function test(what) {
 //         console.log('released');
 //     });
 // })
-var reqeust = require('request');
-var t = 1;
-for(var i = 0; i < 1000; i++){
-    reqeust.get('https://www.baidu.com',function(e,r,b){
-        for(var j = 0; j < 5000; j++ ){console.log(j)}
-        console.log('================get================>',t++);
-        if( t == 2)
-            process.nextTick(function(){
-                console.log('-------------------nextTick-------------');
-                for( var k = 0; k < 5000;k++){console.log('::nextTick',k)}
-            })
-    })
-}
+// var reqeust = require('request');
+// var t = 1;
+// for(var i = 0; i < 1000; i++){
+//     reqeust.get('https://www.baidu.com',function(e,r,b){
+//         for(var j = 0; j < 5000; j++ ){console.log(j)}
+//         console.log('================get================>',t++);
+//         if( t == 2)
+//             process.nextTick(function(){
+//                 console.log('-------------------nextTick-------------');
+//                 for( var k = 0; k < 5000;k++){console.log('::nextTick',k)}
+//             })
+//     })
+// }
+
+// var io = require('socket.io')(server);
+// io.on('connection', function (client) {
+//     client.on('event', function (data) {
+//         console.log(data);
+//     });
+//     client.on('disconnect', function () {
+//         console.log('disconnect');
+//     });
+// });
+
+// setTimeout(function () {
+//     io.on('connection', function (socket) {
+//         socket.emit('request', /* */); // emit an event to the socket 
+//         io.emit('broadcast', /* */); // emit an event to all connected sockets 
+//         socket.on('reply', function () { /* */ }); // listen to the event 
+//     });
+// }, 1000);
+var server = require('http').createServer();
+var io = require('socket.io')(server);
+io.on('connection', function (client) {
+    console.log('new client\'s coming...',client.id);
+    client.on('event', function (data) { 
+        console.log('receiving data:',data);
+        client.emit('event',{response:'got you.Nice to hear from you.'});
+    });
+    client.on('disconnect', function () { });
+});
+server.listen(3000);

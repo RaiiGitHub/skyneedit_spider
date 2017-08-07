@@ -21,6 +21,7 @@
     "printf": "^0.2.5",
     "request": "^2.81.0",
     "should": "^11.2.1",
+    "socket.io": "^2.0.3",
     "tape": "^4.8.0",
     "underscore": "^1.8.3",
     "urlencode": "^1.1.0"
